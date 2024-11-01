@@ -39,22 +39,27 @@ lintComputeConstant = undefined
 -- Elimina chequeos de la forma e == True, True == e, e == False y False == e
 -- Construye sugerencias de la forma (LintBool e r)
 lintRedBool :: Linting Expr
-lintRedBool expr@(Infix Eq e (Lit (LitBool True))) = (e, [LintBool expr e])
-lintRedBool expr@(Infix Eq (Lit (LitBool True)) e) = (e, [LintBool expr e])
-lintRedBool expr@(Infix Eq e (Lit (LitBool False))) = (App (Var "not") e, [LintBool expr (App (Var "not") e)])
-lintRedBool expr@(Infix Eq (Lit (LitBool False)) e) = (App (Var "not") e, [LintBool expr (App (Var "not") e)])
+lintRedBool expr@(Infix Eq (Var x) (Lit (LitBool True))) = (Var x, [LintBool expr (Var x)])
+lintRedBool expr@(Infix Eq (Lit (LitBool True)) (Var x)) = (Var x, [LintBool expr (Var x)])
+lintRedBool expr@(Infix Eq (Var x) (Lit (LitBool False))) = (App (Var "not") (Var x), [LintBool expr (App (Var "not") (Var x))])
+lintRedBool expr@(Infix Eq (Lit (LitBool False)) (Var x)) = (App (Var "not") (Var x), [LintBool expr (App (Var "not") (Var x))])
+lintRedBool expr@(Infix Eq (Var x) (Var y)) = (expr, [])
 
 -- Caso para comparar expresiones de forma recursiva
 lintRedBool expr@(Infix op left right) =
     let (newLeft, leftSuggestions) = lintRedBool left
         (newRight, rightSuggestions) = lintRedBool right
         newExpr = Infix op newLeft newRight
-        -- Solo aplicamos `lintRedBool` a `newExpr` si es diferente de `expr`
+        -- Solo aplicamos lintRedBool a newExpr si es diferente de expr
     in if newExpr == expr
-       then (newExpr, leftSuggestions ++ rightSuggestions)
-       else
-           let (finalExpr, finalSuggestions) = lintRedBool newExpr
-           in (finalExpr, leftSuggestions ++ rightSuggestions ++ finalSuggestions)
+            then case newExpr of
+                -- Simplificamos nuevamente si tenemos una expresión comparada con True o False
+                Infix Eq e (Lit (LitBool True)) -> (e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr e])
+                Infix Eq (Lit (LitBool True)) e -> (e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr e])
+                Infix Eq e (Lit (LitBool False)) -> (App (Var "not") e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr (App (Var "not") e)])
+                Infix Eq (Lit (LitBool False)) e -> (App (Var "not") e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr (App (Var "not") e)])
+                _ -> (newExpr, leftSuggestions ++ rightSuggestions)
+        else (newExpr, leftSuggestions ++ rightSuggestions)  -- Aplicamos la simplificación recursiva si hay cambios
 
 lintRedBool (Lam name expr) = 
     let (newExpr, suggestions) = lintRedBool expr
