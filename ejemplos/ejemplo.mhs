@@ -1,0 +1,9 @@
+checkTrue = \x -> x == True
+
+checkTrue2 = \x -> True == x
+
+checkFalse = \y -> False == y
+
+checkFalse2 = \y -> y == False
+
+checkFalse3 = ((x == True) == False) || (y == False)

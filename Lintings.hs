@@ -1,7 +1,8 @@
 module Lintings where
-
+import Debug.Trace (trace)
 import AST
 import LintTypes
+import System.Win32 (xBUTTON1)
 
 
 --------------------------------------------------------------------------------
@@ -38,8 +39,29 @@ lintComputeConstant = undefined
 -- Elimina chequeos de la forma e == True, True == e, e == False y False == e
 -- Construye sugerencias de la forma (LintBool e r)
 lintRedBool :: Linting Expr
-lintRedBool = undefined
+lintRedBool expr@(Infix Eq e (Lit (LitBool True))) = (e, [LintBool expr e])
+lintRedBool expr@(Infix Eq (Lit (LitBool True)) e) = (e, [LintBool expr e])
+lintRedBool expr@(Infix Eq e (Lit (LitBool False))) = (App (Var "not") e, [LintBool expr (App (Var "not") e)])
+lintRedBool expr@(Infix Eq (Lit (LitBool False)) e) = (App (Var "not") e, [LintBool expr (App (Var "not") e)])
 
+-- Caso para comparar expresiones de forma recursiva
+lintRedBool expr@(Infix op left right) =
+    let (newLeft, leftSuggestions) = lintRedBool left
+        (newRight, rightSuggestions) = lintRedBool right
+        newExpr = Infix op newLeft newRight
+        -- Solo aplicamos `lintRedBool` a `newExpr` si es diferente de `expr`
+    in if newExpr == expr
+       then (newExpr, leftSuggestions ++ rightSuggestions)
+       else
+           let (finalExpr, finalSuggestions) = lintRedBool newExpr
+           in (finalExpr, leftSuggestions ++ rightSuggestions ++ finalSuggestions)
+
+lintRedBool (Lam name expr) = 
+    let (newExpr, suggestions) = lintRedBool expr
+    in (Lam name newExpr, suggestions)
+
+lintRedBool expr = (expr, [])
+    
 
 --------------------------------------------------------------------------------
 -- Eliminación de if redundantes
@@ -119,13 +141,23 @@ lintMap = undefined
 -- Dada una transformación a nivel de expresión, se construye
 -- una transformación a nivel de función
 liftToFunc :: Linting Expr -> Linting FunDef
-liftToFunc = undefined
+liftToFunc lintExpr (FunDef name expr) =
+    let (newExpr, suggestions) = lintExpr expr
+    in (FunDef name newExpr, suggestions)
 
 -- encadenar transformaciones:
 (>==>) :: Linting a -> Linting a -> Linting a
-lint1 >==> lint2 = undefined
+(lint1 >==> lint2) expr =
+    let (expr1, suggestions1) = lint1 expr
+        (expr2, suggestions2) = lint2 expr1
+    in (expr2, suggestions1 ++ suggestions2)
 
 -- aplica las transformaciones 'lints' repetidas veces y de forma incremental,
 -- hasta que ya no generen más cambios en 'func'
-lintRec :: Linting a -> Linting a
-lintRec lints func = undefined
+lintRec :: Eq a => Linting a -> Linting a
+lintRec lints expr =
+    let (newExpr, suggestions) = lints expr
+    in if newExpr == expr
+       then (newExpr, suggestions)
+       else let (finalExpr, finalSuggestions) = lintRec lints newExpr
+            in (finalExpr, suggestions ++ finalSuggestions)
