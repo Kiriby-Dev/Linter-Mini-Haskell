@@ -1,0 +1,14 @@
+length = \xs -> case xs of
+  []       -> 0;
+  (x : xs) -> 1 + length xs
+
+null = \xs -> case xs of
+  []       -> True;
+  (x : xs) -> False
+
+not = \b -> if b then False else True
+
+fac = \n -> if n == 0 then 1 else n * fac (n - 1)
+
+fib = \n -> if n == 0 || n == 1 then 1
+            else fib (n - 1) + fib (n - 2)

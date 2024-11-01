@@ -1,0 +1,38 @@
+Función: foo
+**Sugerencia para:
+if True then 2 else 4
+If redundante. Reemplazar por:
+2
+**Sugerencia para:
+1 + 2
+Constante. Reemplazar por:
+3
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+length ls == 0
+Usar null. Reemplazar por:
+null ls
+**Sugerencia para:
+(\ys -> (\ls -> null ls) ys) l : [] ++ bar ls
+Eliminar concatenación. Reemplazar por:
+(\ys -> (\ls -> null ls) ys) l : bar ls
+**Sugerencia para:
+\ls -> null ls
+Usar eta-reducción. Reemplazar por:
+null
+**Sugerencia para:
+\ys -> null ys
+Usar eta-reducción. Reemplazar por:
+null
+**Sugerencia para:
+bar = \xs -> case xs of 
+    [] -> []; 
+    (l : ls) -> null l : bar ls
+Usar map. Reemplazar por:
+bar = map (\l -> null l)
+**Sugerencia para:
+\l -> null l
+Usar eta-reducción. Reemplazar por:
+null
+--------------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+foo = 1 +  if True then 2 else 4  
+
+bar = \xs -> case xs of
+    []       -> [];
+    (l : ls) -> (\ys -> (\ls -> length ls == 0) ys) l:[] ++ bar ls
