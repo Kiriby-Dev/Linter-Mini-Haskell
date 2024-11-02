@@ -99,7 +99,6 @@ lintRedBool expr@(Infix Eq (Lit (LitBool False)) (Var x)) = (App (Var "not") (Va
 lintRedBool expr@(Infix Eq (Var x) (Var y)) = (expr, [])
 
 -- Caso para comparar expresiones de forma recursiva
--- Caso para comparar expresiones de forma recursiva
 lintRedBool expr@(Infix op left right) =
     let (simplLeft, leftSuggestions) = lintRedBool left
         (simplRight, rightSuggestions) = lintRedBool right
@@ -144,8 +143,44 @@ lintRedBool expr = (expr, [])
 -- Sustitución de if con literal en la condición por la rama correspondiente
 -- Construye sugerencias de la forma (LintRedIf e r)
 lintRedIfCond :: Linting Expr
-lintRedIfCond = undefined
+lintRedIfCond expr@(If (Lit (LitBool True)) (Var x) _) = (Var x, [LintRedIf expr (Var x)])
+lintRedIfCond expr@(If (Lit (LitBool False)) _ (Var x)) = (Var x, [LintRedIf expr (Var x)])
+lintRedIfCond expr@(If (Lit (LitBool True)) (Lit x) _) = (Lit x, [LintRedIf expr (Lit x)])
+lintRedIfCond expr@(If (Lit (LitBool False)) _ (Lit x)) = (Lit x, [LintRedIf expr (Lit x)])
 
+lintRedIfCond (If expr1 expr2 expr3) =
+    let (simplifiedExpr1, suggestions1) = lintRedIfCond expr1
+        (simplifiedExpr2, suggestions2) = lintRedIfCond expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfCond expr3
+        partialExpr = If simplifiedExpr1 simplifiedExpr2 simplifiedExpr3
+        (finalExpr, newSuggestions) = case simplifiedExpr1 of
+            Lit (LitBool True)  -> (simplifiedExpr2, [LintRedIf partialExpr simplifiedExpr2])
+            Lit (LitBool False) -> (simplifiedExpr3, [LintRedIf partialExpr simplifiedExpr3])
+            _ -> (partialExpr, [])
+    in (finalExpr, suggestions1 ++ suggestions2 ++ suggestions3 ++ newSuggestions)
+
+lintRedIfCond (Infix op left right) = 
+    let (simplLeft, leftSuggestions) = lintRedIfCond left
+        (simplRight, rightSuggestions) = lintRedIfCond right
+        finalExpr = Infix op simplLeft simplRight
+    in (finalExpr, leftSuggestions ++ rightSuggestions)
+
+lintRedIfCond (Lam name expr) = 
+    let (newExpr, suggestions) = lintRedIfCond expr
+    in (Lam name newExpr, suggestions)
+
+lintRedIfCond (App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lintRedIfCond expr1
+        (newExpr2, suggestions2) = lintRedIfCond expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+lintRedIfCond (Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lintRedIfCond expr1
+        (newExpr2, suggestions2) = lintRedIfCond expr2
+        (newExpr3, suggestions3) = lintRedIfCond expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+
+lintRedIfCond expr = (expr, [])  
 --------------------------------------------------------------------------------
 -- Sustitución de if por conjunción entre la condición y su rama _then_
 -- Construye sugerencias de la forma (LintRedIf e r)

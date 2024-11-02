@@ -1,0 +1,15 @@
+checkIf = if True then (x + 1) else x
+
+checkIf = if False then (x + 1) else x
+
+checkIfX = if True then (if False then (y + 1) else y) else x
+
+checkIf = if True then True else False
+
+checkIf = \b -> if True then (x + 2) else (x + 1)
+
+checkIf = App (if True then (x + 3) else (x + 1)) (x + 1)
+
+checkIf = \b -> Case (if False then (x + 1) else x) (if True then (if False then (y + 1) else y) else x) (sofia luciano (if True then True else False))
+
+checkIf = if True then x + if False then 1 else 2 else 3
