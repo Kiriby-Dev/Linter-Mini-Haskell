@@ -65,6 +65,23 @@ lintRedBool (Lam name expr) =
     let (newExpr, suggestions) = lintRedBool expr
     in (Lam name newExpr, suggestions)
 
+lintRedBool (If expr1 expr2 expr3) =
+    let (newExpr1, suggestions1) = lintRedBool expr1
+        (newExpr2, suggestions2) = lintRedBool expr2
+        (newExpr3, suggestions3) = lintRedBool expr3
+    in (If newExpr1 newExpr2 newExpr3, suggestions1 ++ suggestions2 ++ suggestions3)
+
+lintRedBool (App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lintRedBool expr1
+        (newExpr2, suggestions2) = lintRedBool expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+lintRedBool (Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lintRedBool expr1
+        (newExpr2, suggestions2) = lintRedBool expr2
+        (newExpr3, suggestions3) = lintRedBool expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+
 lintRedBool expr = (expr, [])
     
 
