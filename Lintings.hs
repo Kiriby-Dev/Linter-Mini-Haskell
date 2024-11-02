@@ -13,7 +13,6 @@ import System.Win32 (xBUTTON1)
 freeVariables :: Expr -> [Name]
 freeVariables = undefined
 
-
 --------------------------------------------------------------------------------
 -- LINTINGS
 --------------------------------------------------------------------------------
@@ -184,13 +183,78 @@ lintRedIfCond expr = (expr, [])
 -- Sustitución de if por conjunción entre la condición y su rama _then_
 -- Construye sugerencias de la forma (LintRedIf e r)
 lintRedIfAnd :: Linting Expr
-lintRedIfAnd = undefined
+lintRedIfAnd expr@(If (Var x) (Var y) (Lit (LitBool False))) = (Infix And (Var x) (Var y), [LintRedIf expr (Infix And (Var x) (Var y))])
+lintRedIfAnd expr@(If (Lit x) (Lit y) (Lit (LitBool False))) = (Infix And (Lit x) (Lit y), [LintRedIf expr (Infix And (Lit x) (Lit y))])
+
+lintRedIfAnd (If expr2 expr3 expr1) =
+    let (simplifiedExpr2, suggestions2) = lintRedIfAnd expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfAnd expr3
+        partialExpr = If simplifiedExpr2 simplifiedExpr3 expr1 
+        (finalExpr, newSuggestions) = case expr1 of
+            Lit (LitBool False) -> (Infix And simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix And simplifiedExpr2 simplifiedExpr3)])
+            _ -> (If simplifiedExpr2 simplifiedExpr3 expr1, [])
+    in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
+
+lintRedIfAnd (Infix op left right) = 
+    let (simplLeft, leftSuggestions) = lintRedIfAnd left
+        (simplRight, rightSuggestions) = lintRedIfAnd right
+        finalExpr = Infix op simplLeft simplRight
+    in (finalExpr, leftSuggestions ++ rightSuggestions)
+
+lintRedIfAnd (Lam name expr) = 
+    let (newExpr, suggestions) = lintRedIfAnd expr
+    in (Lam name newExpr, suggestions)
+
+lintRedIfAnd (App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lintRedIfAnd expr1
+        (newExpr2, suggestions2) = lintRedIfAnd expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+lintRedIfAnd (Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lintRedIfAnd expr1
+        (newExpr2, suggestions2) = lintRedIfAnd expr2
+        (newExpr3, suggestions3) = lintRedIfAnd expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+
+lintRedIfAnd expr = (expr, [])  
 
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
 -- Construye sugerencias de la forma (LintRedIf e r)
 lintRedIfOr :: Linting Expr
-lintRedIfOr = undefined
+lintRedIfOr expr@(If (Var x) (Lit (LitBool True)) (Var y)) = (Infix Or (Var x) (Var y), [LintRedIf expr (Infix Or (Var x) (Var y))])
+lintRedIfOr expr@(If (Lit x) (Lit (LitBool True)) (Lit y)) = (Infix Or (Lit x) (Lit y), [LintRedIf expr (Infix Or (Lit x) (Lit y))])
+
+lintRedIfOr (If expr2 expr1 expr3) =
+    let (simplifiedExpr2, suggestions2) = lintRedIfOr expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfOr expr3
+        partialExpr = If simplifiedExpr2 expr1 simplifiedExpr3
+        (finalExpr, newSuggestions) = case expr1 of
+            Lit (LitBool True) -> (Infix Or simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix Or simplifiedExpr2 simplifiedExpr3)])
+            _ -> (If simplifiedExpr2 expr1 simplifiedExpr3, [])
+    in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
+
+lintRedIfOr (Infix op left right) = 
+    let (simplLeft, leftSuggestions) = lintRedIfOr left
+        (simplRight, rightSuggestions) = lintRedIfOr right
+        finalExpr = Infix op simplLeft simplRight
+    in (finalExpr, leftSuggestions ++ rightSuggestions)
+
+lintRedIfOr (Lam name expr) = 
+    let (newExpr, suggestions) = lintRedIfOr expr
+    in (Lam name newExpr, suggestions)
+
+lintRedIfOr (App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lintRedIfOr expr1
+        (newExpr2, suggestions2) = lintRedIfOr expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+lintRedIfOr (Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lintRedIfOr expr1
+        (newExpr2, suggestions2) = lintRedIfOr expr2
+        (newExpr3, suggestions3) = lintRedIfOr expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+lintRedIfOr expr = (expr, [])  
 
 --------------------------------------------------------------------------------
 -- Chequeo de lista vacía

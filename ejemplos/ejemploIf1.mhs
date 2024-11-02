@@ -13,3 +13,5 @@ checkIf = App (if True then (x + 3) else (x + 1)) (x + 1)
 checkIf = \b -> Case (if False then (x + 1) else x) (if True then (if False then (y + 1) else y) else x) (sofia luciano (if True then True else False))
 
 checkIf = if True then x + if False then 1 else 2 else 3
+
+checkIf = if (if True then 3 else 4) then 1 else 2

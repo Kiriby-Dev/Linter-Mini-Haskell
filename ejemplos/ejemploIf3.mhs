@@ -1,0 +1,11 @@
+checkIf3 = if x then True else y
+
+checkIf3 = if True then True else y
+
+checkIf3 = if 1 then True else 2
+
+checkIf3 = if (1 + 2) then True else y
+
+checkIf3 = if (if 1 then False else False) then True else y
+
+checkIf3 = if (if 1 then True else False) then True else y

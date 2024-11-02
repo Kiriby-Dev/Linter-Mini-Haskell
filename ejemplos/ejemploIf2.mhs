@@ -1,0 +1,9 @@
+checkIf2 = if x then y else False
+
+checkIf2 = if True then y else False
+
+checkIf2 = if 1 then 2 else False
+
+checkIf2 = if (1 + 2) then y else False
+
+checkIf2 = if (if 1 then False else False) then y else False
