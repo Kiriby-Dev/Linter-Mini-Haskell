@@ -149,15 +149,14 @@ lintRedIfCond expr@(If (Lit (LitBool True)) (Lit x) _) = (Lit x, [LintRedIf expr
 lintRedIfCond expr@(If (Lit (LitBool False)) _ (Lit x)) = (Lit x, [LintRedIf expr (Lit x)])
 
 lintRedIfCond (If expr1 expr2 expr3) =
-    let (simplifiedExpr1, suggestions1) = lintRedIfCond expr1
-        (simplifiedExpr2, suggestions2) = lintRedIfCond expr2
+    let (simplifiedExpr2, suggestions2) = lintRedIfCond expr2
         (simplifiedExpr3, suggestions3) = lintRedIfCond expr3
-        partialExpr = If simplifiedExpr1 simplifiedExpr2 simplifiedExpr3
-        (finalExpr, newSuggestions) = case simplifiedExpr1 of
+        partialExpr = If expr1 simplifiedExpr2 simplifiedExpr3
+        (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool True)  -> (simplifiedExpr2, [LintRedIf partialExpr simplifiedExpr2])
             Lit (LitBool False) -> (simplifiedExpr3, [LintRedIf partialExpr simplifiedExpr3])
-            _ -> (partialExpr, [])
-    in (finalExpr, suggestions1 ++ suggestions2 ++ suggestions3 ++ newSuggestions)
+            _ -> (If expr1 simplifiedExpr2 simplifiedExpr3, [])
+    in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
 lintRedIfCond (Infix op left right) = 
     let (simplLeft, leftSuggestions) = lintRedIfCond left
