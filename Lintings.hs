@@ -28,8 +28,8 @@ freeVariables = undefined
 -- Reduce expresiones aritméticas/booleanas
 -- Construye sugerencias de la forma (LintCompCst e r)
 lintComputeConstant :: Linting Expr
+--lintComputeConstant expr@(Infix Add (Lit (LitInt x)) (Lit (LitInt y))) = ((LitInt x) + (LitInt y), [LintCompCst  expr (Var x)])
 lintComputeConstant = undefined
-
 
 --------------------------------------------------------------------------------
 -- Eliminación de chequeos redundantes de booleanos
@@ -46,20 +46,19 @@ lintRedBool expr@(Infix Eq (Lit (LitBool False)) (Var x)) = (App (Var "not") (Va
 lintRedBool expr@(Infix Eq (Var x) (Var y)) = (expr, [])
 
 -- Caso para comparar expresiones de forma recursiva
+-- Caso para comparar expresiones de forma recursiva
 lintRedBool expr@(Infix op left right) =
-    let (newLeft, leftSuggestions) = lintRedBool left
-        (newRight, rightSuggestions) = lintRedBool right
-        newExpr = Infix op newLeft newRight
-        -- Solo aplicamos lintRedBool a newExpr si es diferente de expr
-    in if newExpr == expr
-            then case newExpr of
-                -- Simplificamos nuevamente si tenemos una expresión comparada con True o False
-                Infix Eq e (Lit (LitBool True)) -> (e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr e])
-                Infix Eq (Lit (LitBool True)) e -> (e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr e])
-                Infix Eq e (Lit (LitBool False)) -> (App (Var "not") e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr (App (Var "not") e)])
-                Infix Eq (Lit (LitBool False)) e -> (App (Var "not") e, leftSuggestions ++ rightSuggestions ++ [LintBool newExpr (App (Var "not") e)])
-                _ -> (newExpr, leftSuggestions ++ rightSuggestions)
-        else (newExpr, leftSuggestions ++ rightSuggestions)  -- Aplicamos la simplificación recursiva si hay cambios
+    let (simplLeft, leftSuggestions) = lintRedBool left
+        (simplRight, rightSuggestions) = lintRedBool right
+        partialExpr = Infix op simplLeft simplRight
+        (finalExpr, newSuggestions) = case partialExpr of
+            -- Simplificamos nuevamente si tenemos una expresión comparada con True o False
+            Infix Eq e (Lit (LitBool True)) -> (e, [LintBool partialExpr e])
+            Infix Eq (Lit (LitBool True)) e -> (e, [LintBool partialExpr e])
+            Infix Eq e (Lit (LitBool False)) -> (App (Var "not") e, [LintBool partialExpr (App (Var "not") e)])
+            Infix Eq (Lit (LitBool False)) e -> (App (Var "not") e, [LintBool partialExpr (App (Var "not") e)])
+            _ -> (partialExpr, [])
+    in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
 
 lintRedBool (Lam name expr) = 
     let (newExpr, suggestions) = lintRedBool expr
