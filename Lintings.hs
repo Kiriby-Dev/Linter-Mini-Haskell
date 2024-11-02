@@ -13,6 +13,35 @@ import System.Win32 (xBUTTON1)
 freeVariables :: Expr -> [Name]
 freeVariables = undefined
 
+applyRecursively :: Linting Expr -> Linting Expr
+applyRecursively lint expr@(Lam name body) = 
+    let (newBody, suggestions) = lint body
+    in (Lam name newBody, suggestions)
+
+applyRecursively lint expr@(App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lint expr1
+        (newExpr2, suggestions2) = lint expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+applyRecursively lint expr@(If cond expr1 expr2) = 
+    let (newCond, suggestionsCond) = lint cond
+        (newExpr1, suggestions1) = lint expr1
+        (newExpr2, suggestions2) = lint expr2
+    in (If newCond newExpr1 newExpr2, suggestionsCond ++ suggestions1 ++ suggestions2)
+
+applyRecursively lint expr@(Infix op expr1 expr2) = 
+    let (newExpr1, suggestions1) = lint expr1
+        (newExpr2, suggestions2) = lint expr2
+    in (Infix op newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+applyRecursively lint expr@(Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lint expr1
+        (newExpr2, suggestions2) = lint expr2
+        (newExpr3, suggestions3) = lint expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+    
+applyRecursively _ expr = (expr, [])
+
 --------------------------------------------------------------------------------
 -- LINTINGS
 --------------------------------------------------------------------------------
@@ -50,8 +79,8 @@ lintComputeConstant expr@(Infix op left right) =
                     | otherwise -> (expr, [])  -- Sin sugerencia si el resultado es negativo
             Infix Mult (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x * y)), [LintCompCst partialExpr (Lit (LitInt (x * y)))])
             Infix Div (Lit (LitInt x)) (Lit (LitInt y))
-                | y /= 0    -> (Lit (LitInt (x `div` y)), [LintCompCst partialExpr (Lit (LitInt (x `div` y)))])
-                | otherwise -> (partialExpr, [])  -- Evita división por 0
+                    | y /= 0    -> (Lit (LitInt (x `div` y)), [LintCompCst partialExpr (Lit (LitInt (x `div` y)))])
+                    | otherwise -> (partialExpr, [])  -- Evita división por 0
             -- Simplificaciones booleanas
             Infix And (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x && y)), [LintCompCst partialExpr (Lit (LitBool (x && y)))])
             Infix Or (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x || y)), [LintCompCst partialExpr (Lit (LitBool (x || y)))])
@@ -59,29 +88,7 @@ lintComputeConstant expr@(Infix op left right) =
             _ -> (partialExpr, [])
     in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
 
-lintComputeConstant (Lam name expr) = 
-    let (newExpr, suggestions) = lintComputeConstant expr
-    in (Lam name newExpr, suggestions)
-
-lintComputeConstant (If expr1 expr2 expr3) =
-    let (newExpr1, suggestions1) = lintComputeConstant expr1
-        (newExpr2, suggestions2) = lintComputeConstant expr2
-        (newExpr3, suggestions3) = lintComputeConstant expr3
-    in (If newExpr1 newExpr2 newExpr3, suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintComputeConstant (App expr1 expr2) = 
-    let (newExpr1, suggestions1) = lintComputeConstant expr1
-        (newExpr2, suggestions2) = lintComputeConstant expr2
-    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
-
-lintComputeConstant (Case expr1 expr2 (name1, name2, expr3)) = 
-    let (newExpr1, suggestions1) = lintComputeConstant expr1
-        (newExpr2, suggestions2) = lintComputeConstant expr2
-        (newExpr3, suggestions3) = lintComputeConstant expr3
-    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintComputeConstant expr = (expr, [])
-
+lintComputeConstant expr = applyRecursively lintComputeConstant expr 
 --------------------------------------------------------------------------------
 -- Eliminación de chequeos redundantes de booleanos
 --------------------------------------------------------------------------------
@@ -111,28 +118,7 @@ lintRedBool expr@(Infix op left right) =
             _ -> (partialExpr, [])
     in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
 
-lintRedBool (Lam name expr) = 
-    let (newExpr, suggestions) = lintRedBool expr
-    in (Lam name newExpr, suggestions)
-
-lintRedBool (If expr1 expr2 expr3) =
-    let (newExpr1, suggestions1) = lintRedBool expr1
-        (newExpr2, suggestions2) = lintRedBool expr2
-        (newExpr3, suggestions3) = lintRedBool expr3
-    in (If newExpr1 newExpr2 newExpr3, suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintRedBool (App expr1 expr2) = 
-    let (newExpr1, suggestions1) = lintRedBool expr1
-        (newExpr2, suggestions2) = lintRedBool expr2
-    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
-
-lintRedBool (Case expr1 expr2 (name1, name2, expr3)) = 
-    let (newExpr1, suggestions1) = lintRedBool expr1
-        (newExpr2, suggestions2) = lintRedBool expr2
-        (newExpr3, suggestions3) = lintRedBool expr3
-    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintRedBool expr = (expr, [])  
+lintRedBool expr = applyRecursively lintRedBool expr 
 
 --------------------------------------------------------------------------------
 -- Eliminación de if redundantes
@@ -157,28 +143,7 @@ lintRedIfCond (If expr1 expr2 expr3) =
             _ -> (If expr1 simplifiedExpr2 simplifiedExpr3, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfCond (Infix op left right) = 
-    let (simplLeft, leftSuggestions) = lintRedIfCond left
-        (simplRight, rightSuggestions) = lintRedIfCond right
-        finalExpr = Infix op simplLeft simplRight
-    in (finalExpr, leftSuggestions ++ rightSuggestions)
-
-lintRedIfCond (Lam name expr) = 
-    let (newExpr, suggestions) = lintRedIfCond expr
-    in (Lam name newExpr, suggestions)
-
-lintRedIfCond (App expr1 expr2) = 
-    let (newExpr1, suggestions1) = lintRedIfCond expr1
-        (newExpr2, suggestions2) = lintRedIfCond expr2
-    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
-
-lintRedIfCond (Case expr1 expr2 (name1, name2, expr3)) = 
-    let (newExpr1, suggestions1) = lintRedIfCond expr1
-        (newExpr2, suggestions2) = lintRedIfCond expr2
-        (newExpr3, suggestions3) = lintRedIfCond expr3
-    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintRedIfCond expr = (expr, [])  
+lintRedIfCond expr = applyRecursively lintRedIfCond expr 
 --------------------------------------------------------------------------------
 -- Sustitución de if por conjunción entre la condición y su rama _then_
 -- Construye sugerencias de la forma (LintRedIf e r)
@@ -195,28 +160,7 @@ lintRedIfAnd (If expr2 expr3 expr1) =
             _ -> (If simplifiedExpr2 simplifiedExpr3 expr1, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfAnd (Infix op left right) = 
-    let (simplLeft, leftSuggestions) = lintRedIfAnd left
-        (simplRight, rightSuggestions) = lintRedIfAnd right
-        finalExpr = Infix op simplLeft simplRight
-    in (finalExpr, leftSuggestions ++ rightSuggestions)
-
-lintRedIfAnd (Lam name expr) = 
-    let (newExpr, suggestions) = lintRedIfAnd expr
-    in (Lam name newExpr, suggestions)
-
-lintRedIfAnd (App expr1 expr2) = 
-    let (newExpr1, suggestions1) = lintRedIfAnd expr1
-        (newExpr2, suggestions2) = lintRedIfAnd expr2
-    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
-
-lintRedIfAnd (Case expr1 expr2 (name1, name2, expr3)) = 
-    let (newExpr1, suggestions1) = lintRedIfAnd expr1
-        (newExpr2, suggestions2) = lintRedIfAnd expr2
-        (newExpr3, suggestions3) = lintRedIfAnd expr3
-    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
-
-lintRedIfAnd expr = (expr, [])  
+lintRedIfAnd  expr = applyRecursively lintRedIfAnd  expr
 
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
@@ -234,27 +178,7 @@ lintRedIfOr (If expr2 expr1 expr3) =
             _ -> (If simplifiedExpr2 expr1 simplifiedExpr3, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfOr (Infix op left right) = 
-    let (simplLeft, leftSuggestions) = lintRedIfOr left
-        (simplRight, rightSuggestions) = lintRedIfOr right
-        finalExpr = Infix op simplLeft simplRight
-    in (finalExpr, leftSuggestions ++ rightSuggestions)
-
-lintRedIfOr (Lam name expr) = 
-    let (newExpr, suggestions) = lintRedIfOr expr
-    in (Lam name newExpr, suggestions)
-
-lintRedIfOr (App expr1 expr2) = 
-    let (newExpr1, suggestions1) = lintRedIfOr expr1
-        (newExpr2, suggestions2) = lintRedIfOr expr2
-    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
-
-lintRedIfOr (Case expr1 expr2 (name1, name2, expr3)) = 
-    let (newExpr1, suggestions1) = lintRedIfOr expr1
-        (newExpr2, suggestions2) = lintRedIfOr expr2
-        (newExpr3, suggestions3) = lintRedIfOr expr3
-    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
-lintRedIfOr expr = (expr, [])  
+lintRedIfOr  expr = applyRecursively lintRedIfOr expr
 
 --------------------------------------------------------------------------------
 -- Chequeo de lista vacía
