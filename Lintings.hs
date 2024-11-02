@@ -28,8 +28,60 @@ freeVariables = undefined
 -- Reduce expresiones aritméticas/booleanas
 -- Construye sugerencias de la forma (LintCompCst e r)
 lintComputeConstant :: Linting Expr
---lintComputeConstant expr@(Infix Add (Lit (LitInt x)) (Lit (LitInt y))) = ((LitInt x) + (LitInt y), [LintCompCst  expr (Var x)])
-lintComputeConstant = undefined
+lintComputeConstant expr@(Infix Add (Lit (LitInt x)) (Lit (LitInt y))) = (Lit (LitInt (x + y)), [LintCompCst expr (Lit (LitInt (x + y)))])
+lintComputeConstant expr@(Infix Sub (Lit (LitInt x)) (Lit (LitInt y)))
+                    | y < x     = (Lit (LitInt (x - y)), [LintCompCst expr (Lit (LitInt (x - y)))])
+                    | otherwise = (expr, [])  -- Sin sugerencia si el resultado es negativo
+lintComputeConstant expr@(Infix Mult (Lit (LitInt x)) (Lit (LitInt y))) = (Lit (LitInt (x * y)), [LintCompCst expr (Lit (LitInt (x * y)))])
+lintComputeConstant expr@(Infix Div (Lit (LitInt x)) (Lit (LitInt y)))
+                    | y /= 0    = (Lit (LitInt (x `div` y)), [LintCompCst expr (Lit (LitInt (x `div` y)))])
+                    | otherwise = (expr, [])  -- Sin sugerencia si el divisor es 0
+lintComputeConstant expr@(Infix And (Lit (LitBool x)) (Lit (LitBool y))) = (Lit (LitBool (x && y)), [LintCompCst expr (Lit (LitBool (x && y)))])
+lintComputeConstant expr@(Infix Or (Lit (LitBool x)) (Lit (LitBool y))) = (Lit (LitBool (x || y)), [LintCompCst expr (Lit (LitBool (x || y)))])
+
+lintComputeConstant expr@(Infix op left right) =
+    let (simplLeft, leftSuggestions) = lintComputeConstant left
+        (simplRight, rightSuggestions) = lintComputeConstant right
+        partialExpr = Infix op simplLeft simplRight
+        (finalExpr, newSuggestions) = case partialExpr of
+            -- Simplificaciones aritméticas
+            Infix Add (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x + y)), [LintCompCst partialExpr (Lit (LitInt (x + y)))])
+            Infix Sub (Lit (LitInt x)) (Lit (LitInt y))
+                    | y < x     -> (Lit (LitInt (x - y)), [LintCompCst expr (Lit (LitInt (x - y)))])
+                    | otherwise -> (expr, [])  -- Sin sugerencia si el resultado es negativo
+            Infix Mult (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x * y)), [LintCompCst partialExpr (Lit (LitInt (x * y)))])
+            Infix Div (Lit (LitInt x)) (Lit (LitInt y))
+                | y /= 0    -> (Lit (LitInt (x `div` y)), [LintCompCst partialExpr (Lit (LitInt (x `div` y)))])
+                | otherwise -> (partialExpr, [])  -- Evita división por 0
+            -- Simplificaciones booleanas
+            Infix And (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x && y)), [LintCompCst partialExpr (Lit (LitBool (x && y)))])
+            Infix Or (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x || y)), [LintCompCst partialExpr (Lit (LitBool (x || y)))])
+
+            _ -> (partialExpr, [])
+    in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
+
+lintComputeConstant (Lam name expr) = 
+    let (newExpr, suggestions) = lintComputeConstant expr
+    in (Lam name newExpr, suggestions)
+
+lintComputeConstant (If expr1 expr2 expr3) =
+    let (newExpr1, suggestions1) = lintComputeConstant expr1
+        (newExpr2, suggestions2) = lintComputeConstant expr2
+        (newExpr3, suggestions3) = lintComputeConstant expr3
+    in (If newExpr1 newExpr2 newExpr3, suggestions1 ++ suggestions2 ++ suggestions3)
+
+lintComputeConstant (App expr1 expr2) = 
+    let (newExpr1, suggestions1) = lintComputeConstant expr1
+        (newExpr2, suggestions2) = lintComputeConstant expr2
+    in (App newExpr1 newExpr2, suggestions1 ++ suggestions2)
+
+lintComputeConstant (Case expr1 expr2 (name1, name2, expr3)) = 
+    let (newExpr1, suggestions1) = lintComputeConstant expr1
+        (newExpr2, suggestions2) = lintComputeConstant expr2
+        (newExpr3, suggestions3) = lintComputeConstant expr3
+    in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
+
+lintComputeConstant expr = (expr, [])
 
 --------------------------------------------------------------------------------
 -- Eliminación de chequeos redundantes de booleanos
@@ -43,6 +95,7 @@ lintRedBool expr@(Infix Eq (Var x) (Lit (LitBool True))) = (Var x, [LintBool exp
 lintRedBool expr@(Infix Eq (Lit (LitBool True)) (Var x)) = (Var x, [LintBool expr (Var x)])
 lintRedBool expr@(Infix Eq (Var x) (Lit (LitBool False))) = (App (Var "not") (Var x), [LintBool expr (App (Var "not") (Var x))])
 lintRedBool expr@(Infix Eq (Lit (LitBool False)) (Var x)) = (App (Var "not") (Var x), [LintBool expr (App (Var "not") (Var x))])
+
 lintRedBool expr@(Infix Eq (Var x) (Var y)) = (expr, [])
 
 -- Caso para comparar expresiones de forma recursiva
@@ -81,8 +134,7 @@ lintRedBool (Case expr1 expr2 (name1, name2, expr3)) =
         (newExpr3, suggestions3) = lintRedBool expr3
     in (Case newExpr1 newExpr2 (name1, name2, newExpr3), suggestions1 ++ suggestions2 ++ suggestions3)
 
-lintRedBool expr = (expr, [])
-    
+lintRedBool expr = (expr, [])  
 
 --------------------------------------------------------------------------------
 -- Eliminación de if redundantes

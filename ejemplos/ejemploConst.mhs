@@ -1,0 +1,27 @@
+checkSuma = 2 + 3
+
+checkResta = 5 - 2
+
+checkRestaNegativo = 5 - 7
+
+checkMult = 4 * 2
+
+checkDiv = 8 div 2
+
+checkDiv0 = 5 div 0
+
+checkAnd = True && False
+
+checkOr = True || False
+
+checkLam = \b -> (1 + 1)
+
+checkLamYIf = \b -> if (2 + 3) then (4 * 5) else (b + (1 + 1))
+
+checkLamYCase = \b -> Case (5 - 1) ((b + 1) + 1) (sofia luciano (True && False))
+
+checkLamYApp = \b -> App (False || True) (10 div 5)
+
+checkCombinada = (((1 + 2) * 5) - (1 + (5 * 2))) div 2
+
+checkCombinada = (((1 + 2) * 3) - (4 + (5 * 2))) div 2

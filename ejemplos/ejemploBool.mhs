@@ -1,0 +1,33 @@
+checkTrue = \x -> x == True
+
+checkTrue2 = \x -> True == x
+
+checkFalse = \y -> False == y
+
+checkFalse2 = \y -> y == False
+
+checkFalse3 = ((x == True) == False) || (y == False)
+
+checkFalse4 = (x == y) == True
+
+checkFalse5 = True == True
+
+checkFalse6 = False == False
+
+checkFalse7 = (x == False) == True
+
+checkFalse8 = ((x == False) == (y == True)) == True
+
+checkFalse9 = ((y == False) && ((x == True) == False)) || (x == True)
+
+checkFalse10 = \b -> if (b == True) then (False == x) else (y == False)
+
+checkFalse11 = \b -> Case (b == True) (False == x) (sofia luciano (y == False))
+
+checkFalse11 = \b -> App (x == False) ((x == False) == False)
+
+checkFalse12 = \b -> App True ((x == False) == False)
+
+checkFalse13 = \b -> App True False
+
+checkFalse14 = False
