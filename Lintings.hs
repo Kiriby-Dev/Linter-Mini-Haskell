@@ -2,8 +2,7 @@ module Lintings where
 import Debug.Trace (trace)
 import AST
 import LintTypes
-import System.Win32 (xBUTTON1)
-
+import System.Win32
 
 --------------------------------------------------------------------------------
 -- AUXILIARES
@@ -252,13 +251,17 @@ lintEta expr@(Lam x (App (Var y) (Var z)))
 lintEta expr@(Lam x (App e (Var y))) 
     | x == y && x `notElem` freeVariables e = 
         let (reducedE, suggestions) = lintEta e  -- Aplicar recursión a e.
-        in (Lam x (App reducedE (Var y)), suggestions ++ [LintEta expr reducedE])  -- Reemplazar por la expresión simplificada de e.
+        in (reducedE, suggestions ++ [LintEta expr reducedE])  -- Reemplazar por la expresión simplificada de e.
     
     | otherwise = 
         let (simplExpr, suggestions) = lintEta e  -- Intentar simplificar e siempre.
-            partialExpr = Lam x (App simplExpr (Var y))  
-        in (partialExpr, suggestions)  -- Retornar la forma de Lam con e simplificado.
-
+            partialExpr = Lam x (App simplExpr (Var y))
+            (finalExpr, newSuggestions) = 
+                if simplExpr == e  -- Solo agrega sugerencias si hay un cambio.
+                then (expr, [])
+                else (partialExpr, [LintEta expr partialExpr])
+        in (finalExpr, suggestions ++ newSuggestions)
+        
 -- Aplicar la función recursivamente en toda la expresión.
 lintEta expr = applyRecursively lintEta expr
 
