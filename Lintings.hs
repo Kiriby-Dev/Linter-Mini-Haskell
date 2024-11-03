@@ -105,10 +105,10 @@ lintRedBool expr@(Infix Eq (Lit (LitBool False)) (Var x)) = (App (Var "not") (Va
 lintRedBool expr@(Infix Eq (Var x) (Var y)) = (expr, [])
 
 -- Caso para comparar expresiones de forma recursiva
-lintRedBool expr@(Infix op left right) =
+lintRedBool expr@(Infix Eq left right) =
     let (simplLeft, leftSuggestions) = lintRedBool left
         (simplRight, rightSuggestions) = lintRedBool right
-        partialExpr = Infix op simplLeft simplRight
+        partialExpr = Infix Eq simplLeft simplRight
         (finalExpr, newSuggestions) = case partialExpr of
             -- Simplificamos nuevamente si tenemos una expresión comparada con True o False
             Infix Eq e (Lit (LitBool True)) -> (e, [LintBool partialExpr e])
@@ -140,7 +140,7 @@ lintRedIfCond (If expr1 expr2 expr3) =
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool True)  -> (simplifiedExpr2, [LintRedIf partialExpr simplifiedExpr2])
             Lit (LitBool False) -> (simplifiedExpr3, [LintRedIf partialExpr simplifiedExpr3])
-            _ -> (If expr1 simplifiedExpr2 simplifiedExpr3, [])
+            _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
 lintRedIfCond expr = applyRecursively lintRedIfCond expr 
@@ -157,10 +157,10 @@ lintRedIfAnd (If expr2 expr3 expr1) =
         partialExpr = If simplifiedExpr2 simplifiedExpr3 expr1 
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool False) -> (Infix And simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix And simplifiedExpr2 simplifiedExpr3)])
-            _ -> (If simplifiedExpr2 simplifiedExpr3 expr1, [])
+            _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfAnd  expr = applyRecursively lintRedIfAnd  expr
+lintRedIfAnd expr = applyRecursively lintRedIfAnd  expr
 
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
@@ -175,10 +175,10 @@ lintRedIfOr (If expr2 expr1 expr3) =
         partialExpr = If simplifiedExpr2 expr1 simplifiedExpr3
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool True) -> (Infix Or simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix Or simplifiedExpr2 simplifiedExpr3)])
-            _ -> (If simplifiedExpr2 expr1 simplifiedExpr3, [])
+            _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfOr  expr = applyRecursively lintRedIfOr expr
+lintRedIfOr expr = applyRecursively lintRedIfOr expr
 
 --------------------------------------------------------------------------------
 -- Chequeo de lista vacía
@@ -187,8 +187,12 @@ lintRedIfOr  expr = applyRecursively lintRedIfOr expr
 -- Construye sugerencias de la forma (LintNull e r)
 
 lintNull :: Linting Expr
-lintNull = undefined
+lintNull expr@(Infix Eq (Var x) (Lit LitNil)) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
+lintNull expr@(Infix Eq (Lit LitNil) (Var x)) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
+lintNull expr@(Infix Eq (App (Var "length") (Var x)) (Lit (LitInt 0))) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
+lintNull expr@(Infix Eq (Lit (LitInt 0)) (App (Var "length") (Var x))) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
 
+lintNull expr = applyRecursively lintNull expr
 --------------------------------------------------------------------------------
 -- Eliminación de la concatenación
 --------------------------------------------------------------------------------
@@ -196,7 +200,17 @@ lintNull = undefined
 -- Construye sugerencias de la forma (LintAppend e r)
 
 lintAppend :: Linting Expr
-lintAppend = undefined
+lintAppend expr@(Infix Append (Infix Cons (Var x) (Lit LitNil)) (Var xs)) = (Infix Cons (Var x) (Var xs), [LintAppend expr (Infix Cons (Var x) (Var xs))])
+
+lintAppend expr@(Infix Append left right) =
+    let (simplRight, rightSuggestions) = lintAppend right
+        partialExpr = Infix Append left simplRight
+        (finalExpr, newSuggestions) = case partialExpr of
+            Infix Append (Infix Cons x (Lit LitNil)) xs -> (Infix Cons x xs, [LintAppend partialExpr (Infix Cons x xs)])
+            _ -> (partialExpr, [])
+    in (finalExpr, rightSuggestions ++ newSuggestions)
+
+lintAppend expr = applyRecursively lintAppend expr
 
 --------------------------------------------------------------------------------
 -- Composición
@@ -205,9 +219,17 @@ lintAppend = undefined
 -- Construye sugerencias de la forma (LintComp e r)
 
 lintComp :: Linting Expr
-lintComp = undefined
+lintComp expr@(App (Var f) (App g (Var t))) = (App (Infix Comp (Var f) g) (Var t), [LintComp expr (App (Infix Comp (Var f) g) (Var t))])
 
+lintComp expr@(App expr1 expr2) =
+    let (simplExpr2, suggestions2) = lintComp expr2
+        partialExpr = App expr1 simplExpr2
+        (finalExpr, newSuggestions) = case partialExpr of
+            App (Var f) (App g (Var t)) -> (App (Infix Comp (Var f) g) (Var t), [LintComp partialExpr (App (Infix Comp (Var f) g) (Var t))])
+            _ -> (partialExpr, [])
+    in (finalExpr, suggestions2 ++ newSuggestions)
 
+lintComp expr = applyRecursively lintComp expr
 --------------------------------------------------------------------------------
 -- Eta Redución
 --------------------------------------------------------------------------------

@@ -1,0 +1,3 @@
+checkAppend = x:[] ++ xs
+
+checkAppend = x:[] ++ (y:[] ++ ys)

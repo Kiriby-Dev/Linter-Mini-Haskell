@@ -1,0 +1,15 @@
+checkNull = e == []
+
+checkNull = [] == e
+
+checkNull = length e == 0
+
+checkNull = 0 == length e
+
+checkNull = \b -> e == []
+
+checkNull  = \b -> if (e == []) then (length e == 0) else (b + ([] == e))
+
+checkNull  = \b -> Case (e == []) (e == []) (sofia luciano (e == []))
+
+checkNull  = \b -> App (e == []) (e == [])

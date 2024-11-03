@@ -1,0 +1,7 @@
+checkComp = f (g x)
+
+checkComp = f (g (h x))
+
+checkComp = f (g (h (t x)))
+
+checkComp = f (g (h (t (l x))))
