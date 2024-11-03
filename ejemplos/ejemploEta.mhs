@@ -10,4 +10,4 @@ check = \x -> (\z -> (z + x) z) y
 
 check = \x -> (\b -> (z + x) z) x
 
-check =  \y -> (\x -> f y x) y -- ejemplo letra, la expr total es f y y
+check =  \y -> (\x -> f y x) y -- ejemplo letra, la expr total es \y -> f y y

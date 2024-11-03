@@ -245,26 +245,25 @@ lintComp expr = applyRecursively lintComp expr
 
 lintEta :: Linting Expr
 lintEta expr@(Lam x (App (Var y) (Var z))) 
-    | x /= y && z == x = (Var y, [LintEta expr (Var y)]) 
-    | otherwise = (expr, []) 
+    | x /= y && z == x = 
+        (Var y, [LintEta expr (Var y)]) 
+    | otherwise = 
+        (expr, []) 
 
 lintEta expr@(Lam x (App e (Var y))) 
     | x == y && x `notElem` freeVariables e = 
-        let (reducedE, suggestions) = lintEta e  -- Aplicar recursión a e.
-        in (reducedE, suggestions ++ [LintEta expr reducedE])  -- Reemplazar por la expresión simplificada de e.
-    
+        let (reducedE, suggestions) = lintEta e  
+        in (reducedE, suggestions ++ [LintEta expr reducedE])  
     | otherwise = 
-        let (simplExpr, suggestions) = lintEta e  -- Intentar simplificar e siempre.
-            partialExpr = Lam x (App simplExpr (Var y))
+        let (simplExpr, suggestions) = lintEta e -- SIMPLIFICO E
+            partialExpr = Lam x (App simplExpr (Var y)) -- expresión parcial
             (finalExpr, newSuggestions) = 
-                if simplExpr == e  -- Solo agrega sugerencias si hay un cambio.
+                if partialExpr == expr -- si no se pudo simplificar e
                 then (expr, [])
                 else (partialExpr, [LintEta expr partialExpr])
         in (finalExpr, suggestions ++ newSuggestions)
-        
--- Aplicar la función recursivamente en toda la expresión.
-lintEta expr = applyRecursively lintEta expr
 
+lintEta expr = applyRecursively lintEta expr
 
 --------------------------------------------------------------------------------
 -- Eliminación de recursión con map
