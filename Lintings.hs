@@ -252,24 +252,13 @@ lintEta expr@(Lam x (App (Var y) (Var z)))
 
 lintEta expr@(Lam x (App e (Var y))) 
     | x == y && x `notElem` freeVariables e = 
-        let (reducedE, suggestions) = lintEta e  
-        in (reducedE, suggestions ++ [LintEta expr reducedE])  
-    | otherwise = 
-        let (simplExpr, suggestions) = lintEta e -- SIMPLIFICO E
-            partialExpr = Lam x (App simplExpr (Var y)) -- expresión parcial
-            (finalExpr, newSuggestions) = 
-                if partialExpr == expr -- si no se pudo simplificar e
-                then (expr, [])
-                else (partialExpr, [LintEta expr partialExpr])
-        in (finalExpr, suggestions ++ newSuggestions)
+        let (reducedE, suggestions) = lintEta e
+            partialExpr = Lam x (App reducedE (Var y))
+        in (reducedE, suggestions ++ [LintEta partialExpr reducedE])  
+    | otherwise = lintEta e -- SIMPLIFICO E
 
 lintEta expr = applyRecursively lintEta expr
 
---------------------------------------------------------------------------------
--- Eliminación de recursión con map
---------------------------------------------------------------------------------
-
--- Sustituye recursión sobre listas por `map`
 -- Construye sugerencias de la forma (LintMap f r)
 lintMap :: Linting FunDef
 lintMap = undefined

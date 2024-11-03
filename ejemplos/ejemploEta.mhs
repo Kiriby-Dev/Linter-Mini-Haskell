@@ -2,6 +2,8 @@ check = \x -> (x + y) x
 
 check = \x -> (\x -> (x + y) x ) y 
 
+check = \x -> (\x -> (y) x ) y 
+
 check = \x -> (y) x 
 
 check = \x -> (\x -> (y) x) x 
