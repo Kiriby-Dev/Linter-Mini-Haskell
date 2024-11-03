@@ -1,0 +1,13 @@
+check = \x -> (x + y) x -- sustituye la expresión por (x+y)
+
+check = \x -> (x + y) y -- no hay sugerencias
+
+check = \x -> (\z -> (z + x) z) x -- sustituye el de más adentro por (z+x) y luego sustituye el grande por (z+x)
+
+check = \x -> (\z -> (z + x) z) y -- sustituye solo el de adentro
+
+check = \x -> (\b -> (z + x) z) x -- sustituye solo el de afuera
+
+check = \x -> (\x -> (z + x) z) x -- para ver que pasa
+
+check =  \y -> (\x -> f y x) y -- ejemplo letra, debe reemplazar por f y y
