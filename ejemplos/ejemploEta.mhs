@@ -4,7 +4,7 @@ check = \x -> (\x -> (x + y) x ) y
 
 check = \x -> (y) x 
 
-check = \x -> (\x -> (x)) x 
+check = \x -> (\x -> (y) x) x 
 
 check = \x -> (\z -> (z + x) z) y 
 

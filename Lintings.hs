@@ -246,10 +246,13 @@ lintComp expr = applyRecursively lintComp expr
 
 lintEta :: Linting Expr
 lintEta expr@(Lam x (App e (Var y))) 
-    | x == y && x `notElem` (freeVariables e) = (e, [LintEta expr e])  -- Caso en el que x es igual a y y x no ocurre libre en e.
-    | otherwise = 
-        let (newE, suggestions) = lintEta e  -- Recursión en e si x y y son distintas.
-        in (Lam x (App newE (Var y)), suggestions)
+    | x == y && x `notElem` freeVariables e = (e, [LintEta expr e])  -- si x no ocurre libre en e, entonces reemplazo.
+    | x == y = 
+        let (simplExpr, suggestions) = lintEta e  -- Recursión en e
+            finalExpr = simplExpr
+        in (finalExpr, suggestions ++ [LintEta expr finalExpr])  
+    | otherwise = (expr, [])  -- Si x != y, no se puede simplificar.
+
 -- RECURSIÓN, busco expresión de la forma lambda-abstracción
 lintEta expr = applyRecursively lintEta expr
 
