@@ -245,15 +245,21 @@ lintComp expr = applyRecursively lintComp expr
 -- Construye sugerencias de la forma (LintEta e r)
 
 lintEta :: Linting Expr
-lintEta expr@(Lam x (App e (Var y))) 
-    | x == y && x `notElem` freeVariables e = (e, [LintEta expr e])  -- si x no ocurre libre en e, entonces reemplazo.
-    | x == y = 
-        let (simplExpr, suggestions) = lintEta e  -- Recursión en e
-            finalExpr = simplExpr
-        in (finalExpr, suggestions ++ [LintEta expr finalExpr])  
-    | otherwise = (expr, [])  -- Si x != y, no se puede simplificar.
+lintEta expr@(Lam x (App (Var y) (Var z))) 
+    | x /= y && z == x = (Var y, [LintEta expr (Var y)]) 
+    | otherwise = (expr, []) 
 
--- RECURSIÓN, busco expresión de la forma lambda-abstracción
+lintEta expr@(Lam x (App e (Var y))) 
+    | x == y && x `notElem` freeVariables e = 
+        let (reducedE, suggestions) = lintEta e  -- Aplicar recursión a e.
+        in (Lam x (App reducedE (Var y)), suggestions ++ [LintEta expr reducedE])  -- Reemplazar por la expresión simplificada de e.
+    
+    | otherwise = 
+        let (simplExpr, suggestions) = lintEta e  -- Intentar simplificar e siempre.
+            partialExpr = Lam x (App simplExpr (Var y))  
+        in (partialExpr, suggestions)  -- Retornar la forma de Lam con e simplificado.
+
+-- Aplicar la función recursivamente en toda la expresión.
 lintEta expr = applyRecursively lintEta expr
 
 
