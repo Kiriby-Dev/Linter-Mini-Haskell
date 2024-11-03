@@ -11,7 +11,15 @@ import System.Win32 (xBUTTON1)
 
 -- Computa la lista de variables libres de una expresión
 freeVariables :: Expr -> [Name]
-freeVariables = undefined
+freeVariables (Var x) = [x] -- CASO BASE
+freeVariables (Lit _) = [] -- CASO BASE
+-- RECURSIÓN: 
+freeVariables (Infix _ e1 e2) = freeVariables e1 ++ freeVariables e2
+freeVariables (App e1 e2) = freeVariables e1 ++ freeVariables e2
+freeVariables (Lam x e) = filter (/= x) (freeVariables e) -- Elimina x, pq quedará ligada.
+freeVariables (Case e1 e2 (x, y, e3)) = 
+    freeVariables e1 ++ freeVariables e2 ++ filter (\v -> v /= x && v /= y) (freeVariables e3)  -- Elimina x e y pq ya están ligadas (ME QUEDAN DUDAS PERO NO ENTENDÍ BIEN LA DEF DEL CASE).
+freeVariables (If e1 e2 e3) = freeVariables e1 ++ freeVariables e2 ++ freeVariables e3
 
 applyRecursively :: Linting Expr -> Linting Expr
 applyRecursively lint expr@(Lam name body) = 
@@ -237,7 +245,13 @@ lintComp expr = applyRecursively lintComp expr
 -- Construye sugerencias de la forma (LintEta e r)
 
 lintEta :: Linting Expr
-lintEta = undefined
+lintEta expr@(Lam x (App e (Var y))) 
+    | x == y && x `notElem` filter (/= x) (freeVariables e) = (e, [LintEta expr e])  -- Caso en el que x es igual a y y x no ocurre libre en e.
+    | otherwise = 
+        let (newE, suggestions) = lintEta e  -- Recursión en e si x y y son distintas.
+        in (Lam x (App newE (Var y)), suggestions)
+-- RECURSIÓN, busco expresión de la forma lambda-abstracción
+lintEta expr = applyRecursively lintEta expr
 
 
 --------------------------------------------------------------------------------
