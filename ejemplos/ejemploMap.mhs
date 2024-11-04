@@ -1,0 +1,19 @@
+ incr = \ls-> case ls of
+    []-> [];
+    (x : xs)-> (x + 1) : incr xs
+
+func = \l -> case l of
+    [] -> [];
+    (x : xs) -> x : func xs
+
+length = \xs -> case xs of 
+    [] -> 0; 
+    (x : xs) -> 1 + length xs
+
+null = \xs -> case xs of 
+    [] -> True; 
+    (x : xs) -> False
+
+bar = \xs-> case xs of
+    []-> [];
+    (l : ls)-> (\ys-> (\ls-> length ls == 0) ys) l:[] ++ bar ls

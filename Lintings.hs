@@ -261,8 +261,22 @@ lintEta expr = applyRecursively lintEta expr
 
 -- Construye sugerencias de la forma (LintMap f r)
 lintMap :: Linting FunDef
-lintMap = undefined
+lintMap expr@(FunDef name (Lam l (Case (Var l') (Lit LitNil) (x, xs, body))))
+    | l == l' =
+        let (extractedExpr, matchesPattern) = 
+                case body of
+                    Infix Cons e (App (Var funcName) innerExpr)
+                        | funcName == name && innerExpr == Var xs -> (e, True)
+                    _ -> (body, False)
+        in case matchesPattern of
+            True 
+                | notElem name (freeVariables extractedExpr) && notElem xs (freeVariables extractedExpr) && notElem l (freeVariables extractedExpr) -> 
+                    let suggestion = LintMap expr (FunDef name (App (Var "map") (Lam x extractedExpr)))
+                    in (FunDef name (App (Var "map") (Lam x extractedExpr)), [suggestion])
+            _ -> (expr, [])
+    | otherwise = (expr, [])
 
+lintMap expr = (expr, [])
 
 --------------------------------------------------------------------------------
 -- Combinación de Lintings
