@@ -1,0 +1,9 @@
+foo = \xs -> \x -> x : (if True && False then xs else [] ) ++ xs
+
+bar = (2 + 4) : (if True then [] else 8:[]) ++ (1:2:3:[])
+
+incr = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> (x + 1) : [] ++ incr xs
+
+

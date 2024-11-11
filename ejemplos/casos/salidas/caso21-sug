@@ -1,0 +1,41 @@
+Función: foo
+Sin sugerencias.
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+if True then 0 else 4
+If redundante. Reemplazar por:
+0
+**Sugerencia para:
+if False then 5 else 6
+If redundante. Reemplazar por:
+6
+**Sugerencia para:
+0 + 1
+Constante. Reemplazar por:
+1
+**Sugerencia para:
+1 + 2
+Constante. Reemplazar por:
+3
+**Sugerencia para:
+3 + 3
+Constante. Reemplazar por:
+6
+**Sugerencia para:
+4 + 6
+Constante. Reemplazar por:
+10
+**Sugerencia para:
+3 + 10
+Constante. Reemplazar por:
+13
+**Sugerencia para:
+2 + 13
+Constante. Reemplazar por:
+15
+**Sugerencia para:
+6 + 15
+Constante. Reemplazar por:
+21
+--------------------------------------------------------------------------------

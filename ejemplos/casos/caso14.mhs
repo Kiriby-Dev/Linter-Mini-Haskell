@@ -1,0 +1,10 @@
+foo = (0 * 3) == length d
+
+bar = \y -> (\x -> a == if True then [] else x:[]) y
+
+baz = if (x : [] ++ xs) == [] then True || False else False
+
+mapNull = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> (length x == 0) : mapNull xs
+

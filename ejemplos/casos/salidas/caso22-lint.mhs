@@ -1,0 +1,11 @@
+id = map (\b -> b && True)
+
+neg = map not
+
+all = \p -> \xs -> case xs of 
+    [] -> True; 
+    (x : xs) -> p x && all p xs
+
+any = \p -> \xs -> case xs of 
+    [] -> True; 
+    (x : xs) -> p x || any p xs

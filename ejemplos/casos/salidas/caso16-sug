@@ -1,0 +1,56 @@
+Función: foo
+**Sugerencia para:
+g (h x y z)
+Usar composición. Reemplazar por:
+(g . h x y) z
+**Sugerencia para:
+f ((g . h x y) z)
+Usar composición. Reemplazar por:
+(f . (g . h x y)) z
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+g (h x)
+Usar composición. Reemplazar por:
+(g . h) x
+**Sugerencia para:
+f ((g . h) x)
+Usar composición. Reemplazar por:
+(f . (g . h)) x
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+g (h x y z)
+Usar composición. Reemplazar por:
+(g . h x y) z
+**Sugerencia para:
+f ((g . h x y) z)
+Usar composición. Reemplazar por:
+(f . (g . h x y)) z
+**Sugerencia para:
+\z -> (f . (g . h x y)) z
+Usar eta-reducción. Reemplazar por:
+f . (g . h x y)
+--------------------------------------------------------------------------------
+Función: qux
+**Sugerencia para:
+g (h x)
+Usar composición. Reemplazar por:
+(g . h) x
+**Sugerencia para:
+f ((g . h) x)
+Usar composición. Reemplazar por:
+(f . (g . h)) x
+**Sugerencia para:
+\z -> (f . (g . h)) x y z
+Usar eta-reducción. Reemplazar por:
+(f . (g . h)) x y
+**Sugerencia para:
+\y -> (f . (g . h)) x y
+Usar eta-reducción. Reemplazar por:
+(f . (g . h)) x
+**Sugerencia para:
+\x -> (f . (g . h)) x
+Usar eta-reducción. Reemplazar por:
+f . (g . h)
+--------------------------------------------------------------------------------

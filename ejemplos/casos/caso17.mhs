@@ -1,0 +1,15 @@
+minim = \x -> \y -> if x < y then x else y
+
+f = \xs -> if len xs > 1 + 1 then tail xs else xs
+
+lenXa = \xs -> \a -> case xs of
+                       [] -> 0 - (0 + 1 * 3 - 2) - (1 div 0);
+                       (x : xs) -> 2 * a - a + lenXa xs a
+
+id = \x -> x
+
+len = if True then \xs -> flip lenXa 1 xs else id
+
+incr = \xs -> case xs of
+  [] -> [];
+  (x : xs) -> id (id (id(1 + x))) : incr xs

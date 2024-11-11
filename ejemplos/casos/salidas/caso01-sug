@@ -1,0 +1,34 @@
+Función: foo
+**Sugerencia para:
+2 + 4
+Constante. Reemplazar por:
+6
+**Sugerencia para:
+6 + 5
+Constante. Reemplazar por:
+11
+**Sugerencia para:
+11 + 6
+Constante. Reemplazar por:
+17
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+2 + 0
+Constante. Reemplazar por:
+2
+**Sugerencia para:
+2 + 3
+Constante. Reemplazar por:
+5
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+True && False
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+False || True
+Constante. Reemplazar por:
+True
+--------------------------------------------------------------------------------

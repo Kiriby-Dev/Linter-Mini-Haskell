@@ -1,0 +1,11 @@
+foo = \f -> f
+
+bar = \y -> f y y
+
+baz = \x -> x + 1
+
+qux = \ys -> case ys of 
+    [] -> 0; 
+    (x : xs) -> 1 + xs
+
+quux = \x -> (\z -> z + x) x

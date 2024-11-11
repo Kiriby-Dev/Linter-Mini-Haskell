@@ -1,0 +1,3 @@
+foo = \c -> \x -> if c then (x == True) else False 
+
+bar = \x -> 10 + if True then 9 else x

@@ -1,0 +1,40 @@
+Función: foo
+**Sugerencia para:
+True && False
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+if False then xs else []
+If redundante. Reemplazar por:
+[]
+**Sugerencia para:
+x : [] ++ xs
+Eliminar concatenación. Reemplazar por:
+x : xs
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+2 + 4
+Constante. Reemplazar por:
+6
+**Sugerencia para:
+if True then [] else 8 : []
+If redundante. Reemplazar por:
+[]
+**Sugerencia para:
+6 : [] ++ (1 : 2 : 3 : [])
+Eliminar concatenación. Reemplazar por:
+6 : (1 : 2 : 3 : [])
+--------------------------------------------------------------------------------
+Función: incr
+**Sugerencia para:
+x + 1 : [] ++ incr xs
+Eliminar concatenación. Reemplazar por:
+x + 1 : incr xs
+**Sugerencia para:
+incr = \ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> x + 1 : incr xs
+Usar map. Reemplazar por:
+incr = map (\x -> x + 1)
+--------------------------------------------------------------------------------

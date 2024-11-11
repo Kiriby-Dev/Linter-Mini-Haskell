@@ -1,0 +1,58 @@
+Función: foo
+**Sugerencia para:
+0 * 3
+Constante. Reemplazar por:
+0
+**Sugerencia para:
+0 == length d
+Usar null. Reemplazar por:
+null d
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+if True then [] else x : []
+If redundante. Reemplazar por:
+[]
+**Sugerencia para:
+a == []
+Usar null. Reemplazar por:
+null a
+**Sugerencia para:
+\y -> (\x -> null a) y
+Usar eta-reducción. Reemplazar por:
+\x -> null a
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+True || False
+Constante. Reemplazar por:
+True
+**Sugerencia para:
+if x : [] ++ xs == [] then True else False
+If redundante. Reemplazar por:
+x : [] ++ xs == [] && True
+**Sugerencia para:
+x : [] ++ xs == []
+Usar null. Reemplazar por:
+null (x : [] ++ xs)
+**Sugerencia para:
+x : [] ++ xs
+Eliminar concatenación. Reemplazar por:
+x : xs
+--------------------------------------------------------------------------------
+Función: mapNull
+**Sugerencia para:
+length x == 0
+Usar null. Reemplazar por:
+null x
+**Sugerencia para:
+mapNull = \ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> null x : mapNull xs
+Usar map. Reemplazar por:
+mapNull = map (\x -> null x)
+**Sugerencia para:
+\x -> null x
+Usar eta-reducción. Reemplazar por:
+null
+--------------------------------------------------------------------------------

@@ -1,0 +1,24 @@
+Función: test1
+**Sugerencia para:
+a == []
+Usar null. Reemplazar por:
+null a
+--------------------------------------------------------------------------------
+Función: test2
+**Sugerencia para:
+[] == b
+Usar null. Reemplazar por:
+null b
+--------------------------------------------------------------------------------
+Función: test3
+**Sugerencia para:
+length c == 0
+Usar null. Reemplazar por:
+null c
+--------------------------------------------------------------------------------
+Función: test4
+**Sugerencia para:
+0 == length d
+Usar null. Reemplazar por:
+null d
+--------------------------------------------------------------------------------

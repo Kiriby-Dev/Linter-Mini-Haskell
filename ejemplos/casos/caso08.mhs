@@ -1,0 +1,40 @@
+incr = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x + 1 : incr xs
+
+nop0 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x + 1 : other xs
+
+
+nop1 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x + 1 : xs
+
+nop2 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x : xs : nop2 xs
+
+nop3 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x : ls : nop3 xs
+
+nop4 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x + 1 : nop4 ls
+
+nop5 = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x + 1 : nop5 (x : xs)
+
+baz_xs0 = True
+baz_xs1 = True
+baz_xs2 = True
+
+baz = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> (x && baz_xs0 && baz_xs1 && baz_xs2) : baz xs
+
+badprec = \ls -> case ls of
+                []       -> [];
+                (x : xs) -> x && baz_xs0 && baz_xs1 && baz_xs2 : badprec xs

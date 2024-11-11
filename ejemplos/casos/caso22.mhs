@@ -1,0 +1,15 @@
+id = \xs -> case xs of
+            [] -> [];
+            (b : bs) -> (if b then True else False) : id bs
+
+neg = \xs -> case xs of
+            [] -> [];
+            (b : bs) -> (b == False) : neg bs
+
+all = \p -> \xs -> case xs of
+                    [] -> True;
+                    (x : xs) -> if p x then all p xs else False 
+
+any = \p -> \xs -> case xs of
+                    [] -> True;
+                    (x : xs) -> if p x then True else any p xs 

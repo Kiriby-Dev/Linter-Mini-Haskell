@@ -1,0 +1,5 @@
+foo = 17
+
+bar = \x -> 5 + x + 1 + 3
+
+baz = True

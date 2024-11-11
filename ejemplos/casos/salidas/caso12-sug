@@ -1,0 +1,30 @@
+Función: foo
+**Sugerencia para:
+f (g x)
+Usar composición. Reemplazar por:
+(f . g) x
+**Sugerencia para:
+\x -> (f . g) x
+Usar eta-reducción. Reemplazar por:
+f . g
+--------------------------------------------------------------------------------
+Función: incr
+**Sugerencia para:
+\y -> (x + 1) y
+Usar eta-reducción. Reemplazar por:
+x + 1
+**Sugerencia para:
+\xs -> (\ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> x + 1 : incr xs) xs
+Usar eta-reducción. Reemplazar por:
+\ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> x + 1 : incr xs
+**Sugerencia para:
+incr = \ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> x + 1 : incr xs
+Usar map. Reemplazar por:
+incr = map (\x -> x + 1)
+--------------------------------------------------------------------------------

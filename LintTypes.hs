@@ -15,7 +15,7 @@ data LintSugg = LintCompCst Expr Expr
 
 instance PrettyPrint LintSugg where
   pp (LintCompCst e r) = suggestionTemplate "Constante" e r
-  pp (LintBool    e r) = suggestionTemplate "Eliminar chequeo reduntante" e r
+  pp (LintBool    e r) = suggestionTemplate "Eliminar chequeo redundante" e r
   pp (LintRedIf   e r) = suggestionTemplate "If redundante" e r
   pp (LintNull    e r) = suggestionTemplate "Usar null" e r  
   pp (LintAppend  e r) = suggestionTemplate "Eliminar concatenación" e r

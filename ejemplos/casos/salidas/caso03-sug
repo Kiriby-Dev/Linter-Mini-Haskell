@@ -1,0 +1,20 @@
+Función: foo
+**Sugerencia para:
+if False then 1 else 2
+If redundante. Reemplazar por:
+2
+**Sugerencia para:
+if True then x + 2 else 3
+If redundante. Reemplazar por:
+x + 2
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+if c then c else False
+If redundante. Reemplazar por:
+c && c
+**Sugerencia para:
+if c then True else c && c
+If redundante. Reemplazar por:
+c || c && c
+--------------------------------------------------------------------------------

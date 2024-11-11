@@ -1,0 +1,42 @@
+Función: foo
+**Sugerencia para:
+True == True
+Eliminar chequeo redundante. Reemplazar por:
+True
+**Sugerencia para:
+False && True
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+False || True
+Constante. Reemplazar por:
+True
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+True == False
+Eliminar chequeo redundante. Reemplazar por:
+False
+**Sugerencia para:
+True && False
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+False || False
+Constante. Reemplazar por:
+False
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+True && False
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+False || True
+Constante. Reemplazar por:
+True
+**Sugerencia para:
+x == True
+Eliminar chequeo redundante. Reemplazar por:
+x
+--------------------------------------------------------------------------------

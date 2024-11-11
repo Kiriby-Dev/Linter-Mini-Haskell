@@ -1,0 +1,7 @@
+foo = \x -> \y -> \z -> \f -> \g -> \h -> (f . (g . h x y)) z
+
+bar = \x -> \y -> \z -> \f -> \g -> \h -> (f . (g . h)) x y z
+
+baz = \f -> \g -> \h -> \x -> \y -> f . (g . h x y)
+
+qux = \f -> \g -> \h -> f . (g . h)

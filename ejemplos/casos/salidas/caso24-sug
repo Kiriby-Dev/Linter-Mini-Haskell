@@ -1,0 +1,33 @@
+Función: max
+Sin sugerencias.
+--------------------------------------------------------------------------------
+Función: maximum
+**Sugerencia para:
+max x (maximum xs)
+Usar composición. Reemplazar por:
+(max x . maximum) xs
+--------------------------------------------------------------------------------
+Función: mapF
+**Sugerencia para:
+mapF = \xs -> case xs of 
+    [] -> []; 
+    (x : xs) -> f x : mapF xs
+Usar map. Reemplazar por:
+mapF = map (\x -> f x)
+**Sugerencia para:
+\x -> f x
+Usar eta-reducción. Reemplazar por:
+f
+--------------------------------------------------------------------------------
+Función: take
+**Sugerencia para:
+(\r -> if n > 0 then x : r else r) (take (n - 1) xs)
+Usar composición. Reemplazar por:
+((\r -> if n > 0 then x : r else r) . take (n - 1)) xs
+--------------------------------------------------------------------------------
+Función: reverse
+**Sugerencia para:
+append (reverse xss)
+Usar composición. Reemplazar por:
+(append . reverse) xss
+--------------------------------------------------------------------------------

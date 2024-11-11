@@ -1,0 +1,70 @@
+Función: test1
+**Sugerencia para:
+x == True
+Eliminar chequeo redundante. Reemplazar por:
+x
+**Sugerencia para:
+True == y
+Eliminar chequeo redundante. Reemplazar por:
+y
+--------------------------------------------------------------------------------
+Función: test2
+**Sugerencia para:
+x == False
+Eliminar chequeo redundante. Reemplazar por:
+not x
+**Sugerencia para:
+False == y
+Eliminar chequeo redundante. Reemplazar por:
+not y
+--------------------------------------------------------------------------------
+Función: test3
+**Sugerencia para:
+x == True
+Eliminar chequeo redundante. Reemplazar por:
+x
+**Sugerencia para:
+False == y
+Eliminar chequeo redundante. Reemplazar por:
+not y
+--------------------------------------------------------------------------------
+Función: test4
+**Sugerencia para:
+x == False
+Eliminar chequeo redundante. Reemplazar por:
+not x
+**Sugerencia para:
+True == y
+Eliminar chequeo redundante. Reemplazar por:
+y
+--------------------------------------------------------------------------------
+Función: foo
+**Sugerencia para:
+b == True
+Eliminar chequeo redundante. Reemplazar por:
+b
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+True == True
+Eliminar chequeo redundante. Reemplazar por:
+True
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+False == False
+Eliminar chequeo redundante. Reemplazar por:
+not False
+--------------------------------------------------------------------------------
+Función: qux
+**Sugerencia para:
+True == False
+Eliminar chequeo redundante. Reemplazar por:
+False
+--------------------------------------------------------------------------------
+Función: quux
+**Sugerencia para:
+False == True
+Eliminar chequeo redundante. Reemplazar por:
+False
+--------------------------------------------------------------------------------

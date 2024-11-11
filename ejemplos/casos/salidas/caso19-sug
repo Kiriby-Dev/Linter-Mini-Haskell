@@ -1,0 +1,44 @@
+Función: foo
+**Sugerencia para:
+\x -> (\y -> y + 1) x
+Usar eta-reducción. Reemplazar por:
+\y -> y + 1
+**Sugerencia para:
+\y -> (\y -> y + 1) y
+Usar eta-reducción. Reemplazar por:
+\y -> y + 1
+**Sugerencia para:
+\x -> (\y -> y + 1) x
+Usar eta-reducción. Reemplazar por:
+\y -> y + 1
+**Sugerencia para:
+\y -> (\y -> y + 1) y
+Usar eta-reducción. Reemplazar por:
+\y -> y + 1
+**Sugerencia para:
+\x -> (\y -> y + 1) x
+Usar eta-reducción. Reemplazar por:
+\y -> y + 1
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+True == y
+Eliminar chequeo redundante. Reemplazar por:
+y
+**Sugerencia para:
+if True then False else True
+If redundante. Reemplazar por:
+False
+**Sugerencia para:
+x == False
+Eliminar chequeo redundante. Reemplazar por:
+not x
+**Sugerencia para:
+(\y -> y) (not x)
+Usar composición. Reemplazar por:
+((\y -> y) . not) x
+**Sugerencia para:
+\x -> ((\y -> y) . not) x
+Usar eta-reducción. Reemplazar por:
+(\y -> y) . not
+--------------------------------------------------------------------------------

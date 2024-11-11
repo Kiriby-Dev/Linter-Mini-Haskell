@@ -1,0 +1,20 @@
+Función: foo
+**Sugerencia para:
+x == True
+Eliminar chequeo redundante. Reemplazar por:
+x
+**Sugerencia para:
+if c then x else False
+If redundante. Reemplazar por:
+c && x
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+if True then 9 else x
+If redundante. Reemplazar por:
+9
+**Sugerencia para:
+10 + 9
+Constante. Reemplazar por:
+19
+--------------------------------------------------------------------------------

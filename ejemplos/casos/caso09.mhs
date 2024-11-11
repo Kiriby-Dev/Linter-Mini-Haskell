@@ -1,0 +1,5 @@
+foo = False && (True == True) || True
+
+bar = True && (True == False) || False
+
+baz = x == (True && False || True)

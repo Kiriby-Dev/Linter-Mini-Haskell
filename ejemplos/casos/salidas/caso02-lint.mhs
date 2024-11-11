@@ -1,0 +1,17 @@
+test1 = x || y
+
+test2 = not x || not y
+
+test3 = x && not y
+
+test4 = not x && y
+
+foo = \b -> b || False
+
+bar = True
+
+baz = not False
+
+qux = False
+
+quux = False

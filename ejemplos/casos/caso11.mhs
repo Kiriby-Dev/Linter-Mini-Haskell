@@ -1,0 +1,4 @@
+foo = \x -> (\y -> if False then y else x + y) x
+
+bar = \x -> (\y -> if True then y else x + y) x
+

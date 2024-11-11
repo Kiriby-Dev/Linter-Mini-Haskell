@@ -1,0 +1,7 @@
+foo = \ls -> if False && (if True then False else True)
+             then []
+             else case ls of
+	            [] -> [];
+		        (x : xs) -> (\rs -> (f x) rs) : foo xs
+
+

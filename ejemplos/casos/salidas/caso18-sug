@@ -1,0 +1,64 @@
+Función: foo
+**Sugerencia para:
+f1 (f2 x)
+Usar composición. Reemplazar por:
+(f1 . f2) x
+**Sugerencia para:
+f4 (f5 x)
+Usar composición. Reemplazar por:
+(f4 . f5) x
+**Sugerencia para:
+f3 ((f4 . f5) x)
+Usar composición. Reemplazar por:
+(f3 . (f4 . f5)) x
+**Sugerencia para:
+f6 (f7 x)
+Usar composición. Reemplazar por:
+(f6 . f7) x
+**Sugerencia para:
+(f6 . f7) x (f8 x)
+Usar composición. Reemplazar por:
+((f6 . f7) x . f8) x
+**Sugerencia para:
+(f3 . (f4 . f5)) x (((f6 . f7) x . f8) x)
+Usar composición. Reemplazar por:
+((f3 . (f4 . f5)) x . ((f6 . f7) x . f8)) x
+**Sugerencia para:
+(f1 . f2) x (((f3 . (f4 . f5)) x . ((f6 . f7) x . f8)) x)
+Usar composición. Reemplazar por:
+((f1 . f2) x . ((f3 . (f4 . f5)) x . ((f6 . f7) x . f8))) x
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+f1 (f2 y)
+Usar composición. Reemplazar por:
+(f1 . f2) y
+**Sugerencia para:
+f4 (f5 y)
+Usar composición. Reemplazar por:
+(f4 . f5) y
+**Sugerencia para:
+f3 ((f4 . f5) y)
+Usar composición. Reemplazar por:
+(f3 . (f4 . f5)) y
+**Sugerencia para:
+f6 (f7 y)
+Usar composición. Reemplazar por:
+(f6 . f7) y
+**Sugerencia para:
+(f6 . f7) y (f8 x)
+Usar composición. Reemplazar por:
+((f6 . f7) y . f8) x
+**Sugerencia para:
+(f3 . (f4 . f5)) y (((f6 . f7) y . f8) x)
+Usar composición. Reemplazar por:
+((f3 . (f4 . f5)) y . ((f6 . f7) y . f8)) x
+**Sugerencia para:
+(f1 . f2) y (((f3 . (f4 . f5)) y . ((f6 . f7) y . f8)) x)
+Usar composición. Reemplazar por:
+((f1 . f2) y . ((f3 . (f4 . f5)) y . ((f6 . f7) y . f8))) x
+**Sugerencia para:
+\x -> ((f1 . f2) y . ((f3 . (f4 . f5)) y . ((f6 . f7) y . f8))) x
+Usar eta-reducción. Reemplazar por:
+(f1 . f2) y . ((f3 . (f4 . f5)) y . ((f6 . f7) y . f8))
+--------------------------------------------------------------------------------

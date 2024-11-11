@@ -1,0 +1,9 @@
+repeat = \x -> x : repeat x
+
+iterate = \f -> \x -> x : (iterate f . f) x
+
+scanl = \f -> \z -> \xs -> z : case xs of 
+    [] -> []; 
+    (x : xs) -> (scanl f . f z) x xs
+
+applyF2 = map (\p -> ((f . fst) p . snd) p)

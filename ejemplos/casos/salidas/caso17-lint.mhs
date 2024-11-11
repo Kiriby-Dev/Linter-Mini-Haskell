@@ -1,0 +1,13 @@
+minim = \x -> \y -> if x < y then x else y
+
+f = \xs -> if len xs > 2 then tail xs else xs
+
+lenXa = \xs -> \a -> case xs of 
+    [] -> 0 - 1 - 1 `div` 0; 
+    (x : xs) -> 2 * a - a + lenXa xs a
+
+id = \x -> x
+
+len = flip lenXa 1
+
+incr = map (\x -> (id . (id . id)) (1 + x))

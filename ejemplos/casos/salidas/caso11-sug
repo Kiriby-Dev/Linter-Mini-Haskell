@@ -1,0 +1,16 @@
+Función: foo
+**Sugerencia para:
+if False then y else x + y
+If redundante. Reemplazar por:
+x + y
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+if True then y else x + y
+If redundante. Reemplazar por:
+y
+**Sugerencia para:
+\x -> (\y -> y) x
+Usar eta-reducción. Reemplazar por:
+\y -> y
+--------------------------------------------------------------------------------

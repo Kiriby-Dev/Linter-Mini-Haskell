@@ -1,0 +1,5 @@
+foo = \xs -> \x -> x : xs
+
+bar = 6 : (1 : 2 : 3 : [])
+
+incr = map (\x -> x + 1)

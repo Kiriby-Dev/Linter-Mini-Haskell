@@ -1,0 +1,32 @@
+Función: foo
+**Sugerencia para:
+if True then False else True
+If redundante. Reemplazar por:
+False
+**Sugerencia para:
+\rs -> f x rs
+Usar eta-reducción. Reemplazar por:
+f x
+**Sugerencia para:
+False && False
+Constante. Reemplazar por:
+False
+**Sugerencia para:
+if False then [] else case ls of 
+    [] -> []; 
+    (x : xs) -> f x : foo xs
+If redundante. Reemplazar por:
+case ls of 
+    [] -> []; 
+    (x : xs) -> f x : foo xs
+**Sugerencia para:
+foo = \ls -> case ls of 
+    [] -> []; 
+    (x : xs) -> f x : foo xs
+Usar map. Reemplazar por:
+foo = map (\x -> f x)
+**Sugerencia para:
+\x -> f x
+Usar eta-reducción. Reemplazar por:
+f
+--------------------------------------------------------------------------------

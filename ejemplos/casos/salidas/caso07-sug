@@ -1,0 +1,34 @@
+Función: foo
+**Sugerencia para:
+\x -> f x
+Usar eta-reducción. Reemplazar por:
+f
+--------------------------------------------------------------------------------
+Función: bar
+**Sugerencia para:
+\x -> f y x
+Usar eta-reducción. Reemplazar por:
+f y
+--------------------------------------------------------------------------------
+Función: baz
+**Sugerencia para:
+\x -> (\x -> x + 1) x
+Usar eta-reducción. Reemplazar por:
+\x -> x + 1
+--------------------------------------------------------------------------------
+Función: qux
+**Sugerencia para:
+\xs -> (\ys -> case ys of 
+    [] -> 0; 
+    (x : xs) -> 1 + xs) xs
+Usar eta-reducción. Reemplazar por:
+\ys -> case ys of 
+    [] -> 0; 
+    (x : xs) -> 1 + xs
+--------------------------------------------------------------------------------
+Función: quux
+**Sugerencia para:
+\y -> (\z -> z + x) y
+Usar eta-reducción. Reemplazar por:
+\z -> z + x
+--------------------------------------------------------------------------------

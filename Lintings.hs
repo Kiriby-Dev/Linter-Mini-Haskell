@@ -49,6 +49,19 @@ applyRecursively lint expr@(Case expr1 expr2 (name1, name2, expr3)) =
     
 applyRecursively _ expr = (expr, [])
 
+-- Función de orquestación para probar múltiples reducciones
+lintRedIfCombined :: Linting Expr
+lintRedIfCombined expr = 
+    let
+        -- Intentar aplicar cada función de reducción en orden
+        (reducedExpr1, suggestions1) = lintRedIfCond expr
+        (reducedExpr2, suggestions2) = if reducedExpr1 == expr then lintRedIfAnd expr else (reducedExpr1, suggestions1)
+        (reducedExpr3, suggestions3) = if reducedExpr2 == expr then lintRedIfOr expr else (reducedExpr2, suggestions2)
+    in
+        if reducedExpr3 == expr 
+        then (expr, suggestions1 ++ suggestions2 ++ suggestions3)
+        else (reducedExpr3, suggestions3)
+
 --------------------------------------------------------------------------------
 -- LINTINGS
 --------------------------------------------------------------------------------
@@ -82,8 +95,8 @@ lintComputeConstant expr@(Infix op left right) =
             -- Simplificaciones aritméticas
             Infix Add (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x + y)), [LintCompCst partialExpr (Lit (LitInt (x + y)))])
             Infix Sub (Lit (LitInt x)) (Lit (LitInt y))
-                    | y < x     -> (Lit (LitInt (x - y)), [LintCompCst expr (Lit (LitInt (x - y)))])
-                    | otherwise -> (expr, [])  -- Sin sugerencia si el resultado es negativo
+                    | y < x     -> (Lit (LitInt (x - y)), [LintCompCst partialExpr (Lit (LitInt (x - y)))])
+                    | otherwise -> (partialExpr, [])  -- Sin sugerencia si el resultado es negativo
             Infix Mult (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x * y)), [LintCompCst partialExpr (Lit (LitInt (x * y)))])
             Infix Div (Lit (LitInt x)) (Lit (LitInt y))
                     | y /= 0    -> (Lit (LitInt (x `div` y)), [LintCompCst partialExpr (Lit (LitInt (x `div` y)))])
@@ -141,8 +154,8 @@ lintRedIfCond expr@(If (Lit (LitBool True)) (Lit x) _) = (Lit x, [LintRedIf expr
 lintRedIfCond expr@(If (Lit (LitBool False)) _ (Lit x)) = (Lit x, [LintRedIf expr (Lit x)])
 
 lintRedIfCond (If expr1 expr2 expr3) =
-    let (simplifiedExpr2, suggestions2) = lintRedIfCond expr2
-        (simplifiedExpr3, suggestions3) = lintRedIfCond expr3
+    let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfCombined expr3
         partialExpr = If expr1 simplifiedExpr2 simplifiedExpr3
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool True)  -> (simplifiedExpr2, [LintRedIf partialExpr simplifiedExpr2])
@@ -159,15 +172,15 @@ lintRedIfAnd expr@(If (Var x) (Var y) (Lit (LitBool False))) = (Infix And (Var x
 lintRedIfAnd expr@(If (Lit x) (Lit y) (Lit (LitBool False))) = (Infix And (Lit x) (Lit y), [LintRedIf expr (Infix And (Lit x) (Lit y))])
 
 lintRedIfAnd (If expr2 expr3 expr1) =
-    let (simplifiedExpr2, suggestions2) = lintRedIfAnd expr2
-        (simplifiedExpr3, suggestions3) = lintRedIfAnd expr3
+    let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfCombined expr3
         partialExpr = If simplifiedExpr2 simplifiedExpr3 expr1 
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool False) -> (Infix And simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix And simplifiedExpr2 simplifiedExpr3)])
             _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfAnd expr = applyRecursively lintRedIfAnd  expr
+lintRedIfAnd expr = applyRecursively lintRedIfAnd expr
 
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
@@ -177,8 +190,8 @@ lintRedIfOr expr@(If (Var x) (Lit (LitBool True)) (Var y)) = (Infix Or (Var x) (
 lintRedIfOr expr@(If (Lit x) (Lit (LitBool True)) (Lit y)) = (Infix Or (Lit x) (Lit y), [LintRedIf expr (Infix Or (Lit x) (Lit y))])
 
 lintRedIfOr (If expr2 expr1 expr3) =
-    let (simplifiedExpr2, suggestions2) = lintRedIfOr expr2
-        (simplifiedExpr3, suggestions3) = lintRedIfOr expr3
+    let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
+        (simplifiedExpr3, suggestions3) = lintRedIfCombined expr3 
         partialExpr = If simplifiedExpr2 expr1 simplifiedExpr3
         (finalExpr, newSuggestions) = case expr1 of
             Lit (LitBool True) -> (Infix Or simplifiedExpr2 simplifiedExpr3, [LintRedIf partialExpr (Infix Or simplifiedExpr2 simplifiedExpr3)])
@@ -194,10 +207,10 @@ lintRedIfOr expr = applyRecursively lintRedIfOr expr
 -- Construye sugerencias de la forma (LintNull e r)
 
 lintNull :: Linting Expr
-lintNull expr@(Infix Eq (Var x) (Lit LitNil)) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
-lintNull expr@(Infix Eq (Lit LitNil) (Var x)) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
-lintNull expr@(Infix Eq (App (Var "length") (Var x)) (Lit (LitInt 0))) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
-lintNull expr@(Infix Eq (Lit (LitInt 0)) (App (Var "length") (Var x))) = (App (Var "null") (Var x), [LintNull expr (App (Var "null") (Var x))])
+lintNull expr@(Infix Eq e (Lit LitNil)) = (App (Var "null") e, [LintNull expr (App (Var "null") e)])
+lintNull expr@(Infix Eq (Lit LitNil) e) = (App (Var "null") e, [LintNull expr (App (Var "null") e)])
+lintNull expr@(Infix Eq (App (Var "length") e) (Lit (LitInt 0))) = (App (Var "null") e, [LintNull expr (App (Var "null") e)])
+lintNull expr@(Infix Eq (Lit (LitInt 0)) (App (Var "length") e)) = (App (Var "null") e, [LintNull expr (App (Var "null") e)])
 
 lintNull expr = applyRecursively lintNull expr
 --------------------------------------------------------------------------------
@@ -226,17 +239,20 @@ lintAppend expr = applyRecursively lintAppend expr
 -- Construye sugerencias de la forma (LintComp e r)
 
 lintComp :: Linting Expr
-lintComp expr@(App (Var f) (App g (Var t))) = (App (Infix Comp (Var f) g) (Var t), [LintComp expr (App (Infix Comp (Var f) g) (Var t))])
+lintComp expr@(App f (App g (Var t))) = (App (Infix Comp f g) (Var t), [LintComp expr (App (Infix Comp f g) (Var t))])
+lintComp expr@(App f (App g (Lit t))) = (App (Infix Comp f g) (Lit t), [LintComp expr (App (Infix Comp f g) (Lit t))])
 
 lintComp expr@(App expr1 expr2) =
     let (simplExpr2, suggestions2) = lintComp expr2
         partialExpr = App expr1 simplExpr2
         (finalExpr, newSuggestions) = case partialExpr of
-            App (Var f) (App g (Var t)) -> (App (Infix Comp (Var f) g) (Var t), [LintComp partialExpr (App (Infix Comp (Var f) g) (Var t))])
+            App f (App g (Var t)) -> (App (Infix Comp f g) (Var t), [LintComp partialExpr (App (Infix Comp f g) (Var t))])
+            App f (App g (Lit t)) -> (App (Infix Comp f g) (Lit t), [LintComp partialExpr (App (Infix Comp f g) (Lit t))])
             _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ newSuggestions)
 
 lintComp expr = applyRecursively lintComp expr
+
 --------------------------------------------------------------------------------
 -- Eta Redución
 --------------------------------------------------------------------------------
@@ -244,18 +260,11 @@ lintComp expr = applyRecursively lintComp expr
 -- Construye sugerencias de la forma (LintEta e r)
 
 lintEta :: Linting Expr
-lintEta expr@(Lam x (App (Var y) (Var z))) 
-    | x /= y && z == x = 
-        (Var y, [LintEta expr (Var y)]) 
-    | otherwise = 
-        (expr, []) 
-
 lintEta expr@(Lam x (App e (Var y))) 
     | x == y && x `notElem` freeVariables e = 
-        let (reducedE, suggestions) = lintEta e
-            partialExpr = Lam x (App reducedE (Var y))
-        in (reducedE, suggestions ++ [LintEta partialExpr reducedE])  
-    | otherwise = lintEta e -- SIMPLIFICO E
+        let (reducedExpr, suggestions) = lintEta e
+            partialExpr = Lam x (App reducedExpr (Var y))
+        in (reducedExpr, suggestions ++ [LintEta partialExpr reducedExpr])
 
 lintEta expr = applyRecursively lintEta expr
 

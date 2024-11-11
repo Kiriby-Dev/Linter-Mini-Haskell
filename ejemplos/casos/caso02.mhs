@@ -1,0 +1,17 @@
+test1 = x == True || True == y
+
+test2 = x == False || False == y
+
+test3 = x == True && False == y
+
+test4 = x == False && True == y
+
+foo = \b -> b == True || False
+
+bar = True == True 
+
+baz = False == False 
+
+qux = True == False
+
+quux = False == True

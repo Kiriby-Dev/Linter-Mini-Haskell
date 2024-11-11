@@ -1,0 +1,3 @@
+concat = x : [] ++ xs
+
+dobleConcat = x : [] ++ (y : [] ++ ys)
