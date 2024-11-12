@@ -75,6 +75,7 @@ lintRedIfCombined expr =
 --------------------------------------------------------------------------------
 -- Reduce expresiones aritméticas/booleanas
 -- Construye sugerencias de la forma (LintCompCst e r)
+
 lintComputeConstant :: Linting Expr
 lintComputeConstant expr@(Infix op left right) =
     let (simplLeft, leftSuggestions) = lintComputeConstant left
@@ -105,6 +106,7 @@ lintComputeConstant expr = applyRecursively lintComputeConstant expr
 --------------------------------------------------------------------------------
 -- Elimina chequeos de la forma e == True, True == e, e == False y False == e
 -- Construye sugerencias de la forma (LintBool e r)
+
 lintRedBool :: Linting Expr
 -- Caso para comparar expresiones de forma recursiva
 lintRedBool expr@(Infix Eq left right) =
@@ -129,6 +131,7 @@ lintRedBool expr = applyRecursively lintRedBool expr
 --------------------------------------------------------------------------------
 -- Sustitución de if con literal en la condición por la rama correspondiente
 -- Construye sugerencias de la forma (LintRedIf e r)
+
 lintRedIfCond :: Linting Expr
 lintRedIfCond (If expr1 expr2 expr3) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
@@ -144,6 +147,7 @@ lintRedIfCond expr = applyRecursively lintRedIfCond expr
 --------------------------------------------------------------------------------
 -- Sustitución de if por conjunción entre la condición y su rama _then_
 -- Construye sugerencias de la forma (LintRedIf e r)
+
 lintRedIfAnd :: Linting Expr
 lintRedIfAnd (If expr2 expr3 expr1) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
@@ -159,6 +163,7 @@ lintRedIfAnd expr = applyRecursively lintRedIfAnd expr
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
 -- Construye sugerencias de la forma (LintRedIf e r)
+
 lintRedIfOr :: Linting Expr
 lintRedIfOr (If expr2 expr1 expr3) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
