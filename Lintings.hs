@@ -66,8 +66,6 @@ lintRedIfCombined expr =
 -- LINTINGS
 --------------------------------------------------------------------------------
 
-
-
 --------------------------------------------------------------------------------
 -- Computación de constantes
 --------------------------------------------------------------------------------
@@ -216,18 +214,16 @@ lintComp :: Linting Expr
 lintComp expr@(App f (App g h)) = 
     let -- Llamada recursiva a las expresiones internas (g h)
         (simplifiedG, suggestionsInner) = lintComp (App g h)
-        -- Reemplazamos g (h x) por (g . h) x
         partialExpr = App f simplifiedG
-        -- Ahora intentamos reemplazar f ((g . h) x) por (f . (g . h)) x
+        -- Composición en lugar de aplicación
         (finalExpr, newSuggestions) = case partialExpr of
-            App outerFunc (App innerFunc expr) -> 
-                (App (Infix Comp outerFunc innerFunc) expr, 
-                 [LintComp partialExpr (App (Infix Comp outerFunc innerFunc) expr)])
+            App f (App g h) -> (App (Infix Comp f g) h, [LintComp partialExpr (App (Infix Comp f g) h)])
             _ -> (partialExpr, [])
-    in (finalExpr, suggestionsInner ++ newSuggestions)
+    in (finalExpr, newSuggestions ++ suggestionsInner)
 
 -- Aplicar recursivamente a otras expresiones que no coinciden con el patrón anterior
 lintComp expr = applyRecursively lintComp expr
+
 --------------------------------------------------------------------------------
 -- Eta Redución
 --------------------------------------------------------------------------------
