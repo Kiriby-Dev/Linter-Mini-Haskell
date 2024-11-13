@@ -23,7 +23,7 @@ Usar eta-reducción. Reemplazar por:
 Función: bar
 **Sugerencia para:
 True == y
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 y
 **Sugerencia para:
 if True then False else True
@@ -31,7 +31,7 @@ If redundante. Reemplazar por:
 False
 **Sugerencia para:
 x == False
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 not x
 **Sugerencia para:
 (\y -> y) (not x)

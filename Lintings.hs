@@ -213,9 +213,12 @@ lintAppend expr = applyRecursively lintAppend expr
 -- Construye sugerencias de la forma (LintComp e r)
 
 lintComp :: Linting Expr
-lintComp expr@(App outerExpr innerExpr) = 
-    let (simplifiedInner, suggestionsInner) = lintComp innerExpr
-        partialExpr = App outerExpr simplifiedInner
+lintComp expr@(App f (App g h)) = 
+    let -- Llamada recursiva a las expresiones internas (g h)
+        (simplifiedG, suggestionsInner) = lintComp (App g h)
+        -- Reemplazamos g (h x) por (g . h) x
+        partialExpr = App f simplifiedG
+        -- Ahora intentamos reemplazar f ((g . h) x) por (f . (g . h)) x
         (finalExpr, newSuggestions) = case partialExpr of
             App outerFunc (App innerFunc expr) -> 
                 (App (Infix Comp outerFunc innerFunc) expr, 
@@ -223,6 +226,7 @@ lintComp expr@(App outerExpr innerExpr) =
             _ -> (partialExpr, [])
     in (finalExpr, suggestionsInner ++ newSuggestions)
 
+-- Aplicar recursivamente a otras expresiones que no coinciden con el patrón anterior
 lintComp expr = applyRecursively lintComp expr
 --------------------------------------------------------------------------------
 -- Eta Redución
@@ -236,7 +240,6 @@ lintEta expr@(Lam x (App e (Var y)))
         let (reducedExpr, suggestions) = lintEta e
             partialExpr = Lam x (App reducedExpr (Var y))
         in (reducedExpr, suggestions ++ [LintEta partialExpr reducedExpr])
-
 lintEta expr = applyRecursively lintEta expr
 
 -- Construye sugerencias de la forma (LintMap f r)

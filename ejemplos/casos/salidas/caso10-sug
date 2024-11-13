@@ -1,7 +1,7 @@
 Función: foo
 **Sugerencia para:
 x == True
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 x
 **Sugerencia para:
 if c then x else False

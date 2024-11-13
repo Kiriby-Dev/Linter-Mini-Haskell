@@ -1,7 +1,7 @@
 Función: foo
 **Sugerencia para:
 True == True
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 True
 **Sugerencia para:
 False && True
@@ -15,7 +15,7 @@ True
 Función: bar
 **Sugerencia para:
 True == False
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 False
 **Sugerencia para:
 True && False
@@ -37,6 +37,6 @@ Constante. Reemplazar por:
 True
 **Sugerencia para:
 x == True
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 x
 --------------------------------------------------------------------------------

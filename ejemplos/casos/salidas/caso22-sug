@@ -13,7 +13,7 @@ id = map (\b -> b && True)
 Función: neg
 **Sugerencia para:
 b == False
-Eliminar chequeo redundante. Reemplazar por:
+Eliminar chequeo reduntante. Reemplazar por:
 not b
 **Sugerencia para:
 neg = \xs -> case xs of 
