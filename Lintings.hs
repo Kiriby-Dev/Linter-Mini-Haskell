@@ -213,13 +213,14 @@ lintAppend expr = applyRecursively lintAppend expr
 lintComp :: Linting Expr
 lintComp expr@(App f (App g h)) = 
     let -- Llamada recursiva a las expresiones internas (g h)
-        (simplifiedG, suggestionsInner) = lintComp (App g h)
-        partialExpr = App f simplifiedG
+        (simplifiedF, suggestionsF) = lintComp f
+        (simplifiedG, suggestionsG) = lintComp (App g h)
+        partialExpr = App simplifiedF simplifiedG
         -- Composición en lugar de aplicación
         (finalExpr, newSuggestions) = case partialExpr of
             App f (App g h) -> (App (Infix Comp f g) h, [LintComp partialExpr (App (Infix Comp f g) h)])
             _ -> (partialExpr, [])
-    in (finalExpr, newSuggestions ++ suggestionsInner)
+    in (finalExpr, suggestionsF ++ suggestionsG ++ newSuggestions)
 
 -- Aplicar recursivamente a otras expresiones que no coinciden con el patrón anterior
 lintComp expr = applyRecursively lintComp expr
@@ -285,3 +286,5 @@ lintRec lints expr =
        then (newExpr, suggestions)
        else let (finalExpr, finalSuggestions) = lintRec lints newExpr
             in (finalExpr, suggestions ++ finalSuggestions)
+
+
