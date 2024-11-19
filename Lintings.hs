@@ -279,12 +279,14 @@ liftToFunc lintExpr (FunDef name expr) =
 
 -- aplica las transformaciones 'lints' repetidas veces y de forma incremental,
 -- hasta que ya no generen más cambios en 'func'
-lintRec :: Eq a => Linting a -> Linting a
-lintRec lints expr =
-    let (newExpr, suggestions) = lints expr
-    in if newExpr == expr
-       then (newExpr, suggestions)
-       else let (finalExpr, finalSuggestions) = lintRec lints newExpr
-            in (finalExpr, suggestions ++ finalSuggestions)
+lintRec :: Linting a -> Linting a
+lintRec lint expr = aplicarLint expr []
+  where
+    aplicarLint current suggestions =
+      let (newExpr, newSuggestions) = lint current
+      in if null newSuggestions
+         then (newExpr, suggestions)
+         else aplicarLint newExpr (suggestions ++ newSuggestions)
+
 
 
