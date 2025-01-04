@@ -1,8 +1,8 @@
 module Lintings where
-import Debug.Trace (trace)
+
 import AST
 import LintTypes
-import System.Win32
+
 
 --------------------------------------------------------------------------------
 -- AUXILIARES
@@ -66,6 +66,8 @@ lintRedIfCombined expr =
 -- LINTINGS
 --------------------------------------------------------------------------------
 
+
+
 --------------------------------------------------------------------------------
 -- Computación de constantes
 --------------------------------------------------------------------------------
@@ -73,14 +75,12 @@ lintRedIfCombined expr =
 --------------------------------------------------------------------------------
 -- Reduce expresiones aritméticas/booleanas
 -- Construye sugerencias de la forma (LintCompCst e r)
-
 lintComputeConstant :: Linting Expr
 lintComputeConstant expr@(Infix op left right) =
     let (simplLeft, leftSuggestions) = lintComputeConstant left
         (simplRight, rightSuggestions) = lintComputeConstant right
         partialExpr = Infix op simplLeft simplRight
         (finalExpr, newSuggestions) = case partialExpr of
-            -- Simplificaciones aritméticas
             Infix Add (Lit (LitInt x)) (Lit (LitInt y)) -> (Lit (LitInt (x + y)), [LintCompCst partialExpr (Lit (LitInt (x + y)))])
             Infix Sub (Lit (LitInt x)) (Lit (LitInt y))
                     | y < x     -> (Lit (LitInt (x - y)), [LintCompCst partialExpr (Lit (LitInt (x - y)))])
@@ -89,14 +89,15 @@ lintComputeConstant expr@(Infix op left right) =
             Infix Div (Lit (LitInt x)) (Lit (LitInt y))
                     | y /= 0    -> (Lit (LitInt (x `div` y)), [LintCompCst partialExpr (Lit (LitInt (x `div` y)))])
                     | otherwise -> (partialExpr, [])  -- Evita división por 0
-            -- Simplificaciones booleanas
             Infix And (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x && y)), [LintCompCst partialExpr (Lit (LitBool (x && y)))])
             Infix Or (Lit (LitBool x)) (Lit (LitBool y)) -> (Lit (LitBool (x || y)), [LintCompCst partialExpr (Lit (LitBool (x || y)))])
 
             _ -> (partialExpr, [])
     in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
 
-lintComputeConstant expr = applyRecursively lintComputeConstant expr 
+lintComputeConstant expr = applyRecursively lintComputeConstant expr
+
+
 --------------------------------------------------------------------------------
 -- Eliminación de chequeos redundantes de booleanos
 --------------------------------------------------------------------------------
@@ -104,15 +105,12 @@ lintComputeConstant expr = applyRecursively lintComputeConstant expr
 --------------------------------------------------------------------------------
 -- Elimina chequeos de la forma e == True, True == e, e == False y False == e
 -- Construye sugerencias de la forma (LintBool e r)
-
 lintRedBool :: Linting Expr
--- Caso para comparar expresiones de forma recursiva
 lintRedBool expr@(Infix Eq left right) =
     let (simplLeft, leftSuggestions) = lintRedBool left
         (simplRight, rightSuggestions) = lintRedBool right
         partialExpr = Infix Eq simplLeft simplRight
         (finalExpr, newSuggestions) = case partialExpr of
-            -- Simplificamos nuevamente si tenemos una expresión comparada con True o False
             Infix Eq e (Lit (LitBool True)) -> (e, [LintBool partialExpr e])
             Infix Eq (Lit (LitBool True)) e -> (e, [LintBool partialExpr e])
             Infix Eq e (Lit (LitBool False)) -> (App (Var "not") e, [LintBool partialExpr (App (Var "not") e)])
@@ -120,7 +118,8 @@ lintRedBool expr@(Infix Eq left right) =
             _ -> (partialExpr, [])
     in (finalExpr, leftSuggestions ++ rightSuggestions ++ newSuggestions)
 
-lintRedBool expr = applyRecursively lintRedBool expr 
+lintRedBool expr = applyRecursively lintRedBool expr
+
 
 --------------------------------------------------------------------------------
 -- Eliminación de if redundantes
@@ -129,7 +128,6 @@ lintRedBool expr = applyRecursively lintRedBool expr
 --------------------------------------------------------------------------------
 -- Sustitución de if con literal en la condición por la rama correspondiente
 -- Construye sugerencias de la forma (LintRedIf e r)
-
 lintRedIfCond :: Linting Expr
 lintRedIfCond (If expr1 expr2 expr3) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
@@ -141,11 +139,11 @@ lintRedIfCond (If expr1 expr2 expr3) =
             _ -> (partialExpr, [])
     in (finalExpr, suggestions2 ++ suggestions3 ++ newSuggestions)
 
-lintRedIfCond expr = applyRecursively lintRedIfCond expr 
+lintRedIfCond expr = applyRecursively lintRedIfCond expr
+
 --------------------------------------------------------------------------------
 -- Sustitución de if por conjunción entre la condición y su rama _then_
 -- Construye sugerencias de la forma (LintRedIf e r)
-
 lintRedIfAnd :: Linting Expr
 lintRedIfAnd (If expr2 expr3 expr1) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
@@ -161,7 +159,6 @@ lintRedIfAnd expr = applyRecursively lintRedIfAnd expr
 --------------------------------------------------------------------------------
 -- Sustitución de if por disyunción entre la condición y su rama _else_
 -- Construye sugerencias de la forma (LintRedIf e r)
-
 lintRedIfOr :: Linting Expr
 lintRedIfOr (If expr2 expr1 expr3) =
     let (simplifiedExpr2, suggestions2) = lintRedIfCombined expr2
@@ -187,6 +184,7 @@ lintNull expr@(Infix Eq (App (Var "length") e) (Lit (LitInt 0))) = (App (Var "nu
 lintNull expr@(Infix Eq (Lit (LitInt 0)) (App (Var "length") e)) = (App (Var "null") e, [LintNull expr (App (Var "null") e)])
 
 lintNull expr = applyRecursively lintNull expr
+
 --------------------------------------------------------------------------------
 -- Eliminación de la concatenación
 --------------------------------------------------------------------------------
@@ -212,18 +210,16 @@ lintAppend expr = applyRecursively lintAppend expr
 
 lintComp :: Linting Expr
 lintComp expr@(App f (App g h)) = 
-    let -- Llamada recursiva a las expresiones internas (g h)
-        (simplifiedF, suggestionsF) = lintComp f
+    let (simplifiedF, suggestionsF) = lintComp f
         (simplifiedG, suggestionsG) = lintComp (App g h)
         partialExpr = App simplifiedF simplifiedG
-        -- Composición en lugar de aplicación
         (finalExpr, newSuggestions) = case partialExpr of
             App f (App g h) -> (App (Infix Comp f g) h, [LintComp partialExpr (App (Infix Comp f g) h)])
             _ -> (partialExpr, [])
     in (finalExpr, suggestionsF ++ suggestionsG ++ newSuggestions)
 
--- Aplicar recursivamente a otras expresiones que no coinciden con el patrón anterior
 lintComp expr = applyRecursively lintComp expr
+
 
 --------------------------------------------------------------------------------
 -- Eta Redución
@@ -239,6 +235,12 @@ lintEta expr@(Lam x (App e (Var y)))
         in (reducedExpr, suggestions ++ [LintEta partialExpr reducedExpr])
 lintEta expr = applyRecursively lintEta expr
 
+
+--------------------------------------------------------------------------------
+-- Eliminación de recursión con map
+--------------------------------------------------------------------------------
+
+-- Sustituye recursión sobre listas por `map`
 -- Construye sugerencias de la forma (LintMap f r)
 lintMap :: Linting FunDef
 lintMap expr@(FunDef name (Lam l (Case (Var l') (Lit LitNil) (x, xs, body))))
@@ -257,6 +259,7 @@ lintMap expr@(FunDef name (Lam l (Case (Var l') (Lit LitNil) (x, xs, body))))
     | otherwise = (expr, [])
 
 lintMap expr = (expr, [])
+
 
 --------------------------------------------------------------------------------
 -- Combinación de Lintings
@@ -287,6 +290,3 @@ lintRec lint expr = aplicarLint expr []
       in if null newSuggestions
          then (newExpr, suggestions)
          else aplicarLint newExpr (suggestions ++ newSuggestions)
-
-
-
